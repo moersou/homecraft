@@ -16,6 +16,79 @@
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon.png?v=pixel-v2">
 <link rel="stylesheet" href="./engine/style.css">
+<style>
+/* The live temperature as its own readout beside the weather symbol, instead of
+   the engine's badge on the icon. Site CSS, so an engine update keeps it. */
+#moodButton b { display: none; }
+#tempPanel {
+  display: grid; place-items: center;
+  min-width: 58px; height: 44px; padding: 0 10px;
+  font: 600 18px/1 var(--text); color: #fff;
+  background: var(--btn);
+  text-shadow: 2px 2px 0 rgba(0, 0, 0, .35);
+  box-shadow: 0 0 0 2px var(--line), inset 2px 2px 0 rgba(255, 255, 255, .32), inset -2px -3px 0 rgba(0, 0, 0, .38);
+  pointer-events: none;
+}
+#tempPanel[hidden] { display: none; }
+@media (max-width: 720px), (max-height: 520px) {
+  #tempPanel { min-width: 52px; height: 40px; padding: 0 8px; font-size: 16px; }
+}
+/* Background music switch: shown when home.config.js `music` is set. */
+#musicButton[aria-pressed="true"] { background: var(--accent); }
+/* The note is drawn inline: the engine's own corner rule sets the span's
+   background shorthand, which would wipe out a background image. */
+#musicButton span { display: grid; place-items: center; }
+#musicButton svg { width: 24px; height: 24px; fill: #fff; filter: drop-shadow(2px 2px 0 rgba(0, 0, 0, .35)); }
+/* The phone's Apple Music app: its own tile, and a track list on its card. */
+#phone .tile.music { background: linear-gradient(165deg, #ff6f80 0%, #fa233b 58%, #d6004f 100%); color: #fff; }
+#phone .tile.music b { display: none; }
+#phone .tile.music::after { content: "\266B"; font: 700 26px/1 var(--text); text-shadow: none; }
+#phone .card.music { justify-content: flex-start; align-items: center; overflow-y: auto; }
+#phone .tracks { width: 100%; margin: 16px 0 0; padding: 0; list-style: none; text-align: left; }
+#phone .tracks button { display: grid; grid-template-columns: 14px 1fr; column-gap: 10px; align-items: center; width: 100%; padding: 9px 8px; border: 0; border-radius: 8px; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+#phone .tracks button:hover { background: color-mix(in srgb, var(--ink) 9%, transparent); }
+#phone .tracks .state { width: 0; height: 0; border-left: 8px solid currentColor; border-top: 5px solid transparent; border-bottom: 5px solid transparent; }
+#phone .tracks button[aria-pressed="true"] .state { width: 8px; height: 10px; border: 0; background: currentColor; }
+#phone .tracks .title { font: 600 13px/1.25 var(--text); }
+#phone .tracks .artist { grid-column: 2; font-size: 11px; opacity: .65; }
+/* Telegram and WhatsApp: white glyphs on the brand colours, since the engine
+   has no look of its own for these two ids. */
+#phone .tile.telegram { background: linear-gradient(160deg, #46b7ea 0%, #1c93d2 58%, #0b7fb6 100%); }
+#phone .tile.whatsapp { background: linear-gradient(160deg, #57e28d 0%, #25d366 55%, #0f9d58 100%); }
+#phone .tile.telegram b, #phone .tile.whatsapp b { display: none; }
+#phone .tile.telegram::after, #phone .tile.whatsapp::after { content: ""; width: 60%; height: 60%; background: center / contain no-repeat; }
+#phone .tile.telegram::after { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23fff' d='M16.906 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z'/%3E%3C/svg%3E"); }
+#phone .tile.whatsapp::after { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23fff' d='M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884'/%3E%3C/svg%3E"); }
+/* The television over the fireplace: a DOM player glued to the screen by a
+   matrix3d transform that world/tv.js recomputes every frame. */
+.tv-shell { position: fixed; left: 0; top: 0; width: 1600px; height: 900px; transform-origin: 0 0; pointer-events: none; will-change: transform; }
+.tv-shell[hidden], .tv-still[hidden], .tv-player[hidden], .tv-change[hidden] { display: none; }
+.tv-still { position: absolute; inset: 0; display: grid; place-content: center; gap: 20px; text-align: center; cursor: pointer; pointer-events: auto;
+  background: radial-gradient(circle at 50% 42%, rgba(40,55,50,.74), rgba(7,12,11,.94));
+  color: #fff; font-family: var(--text); text-shadow: 3px 3px 0 rgba(0, 0, 0, .45); }
+.tv-still b { font: 600 62px/1.1 var(--text); letter-spacing: 2px; }
+.tv-still span { font: 400 30px/1.2 var(--text); opacity: .72; }
+.tv-still::after { content: ""; position: absolute; inset: 16px; border: 3px solid rgba(255, 255, 255, .13); }
+.tv-player { position: absolute; inset: 0; background: #000; pointer-events: auto; }
+.tv-player iframe, .tv-player video { display: block; width: 100%; height: 100%; border: 0; object-fit: cover; }
+.tv-change { position: absolute; right: 2.5%; top: 3.5%; z-index: 3; padding: 13px 24px; font: 600 30px/1 var(--text); color: #fff; cursor: pointer;
+  pointer-events: auto; background: rgba(12, 23, 20, .86); border: 2px solid rgba(255, 255, 255, .22); }
+.tv-change:hover { background: var(--accent); }
+.tv-panel { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 60; display: grid; gap: 12px; width: min(520px, calc(100vw - 40px));
+  padding: 20px; color: #fff; background: rgba(12, 23, 20, .96); border: 2px solid var(--line); box-shadow: 0 18px 40px rgba(0, 0, 0, .45); font-family: var(--text); }
+.tv-panel[hidden] { display: none; }
+.tv-panel label { font: 600 15px/1 var(--text); opacity: .78; }
+.tv-panel input { padding: 11px 12px; font: 500 15px/1.2 var(--text); color: #fff; background: rgba(255, 255, 255, .07); border: 2px solid rgba(255, 255, 255, .18); }
+.tv-panel input:focus { outline: none; border-color: var(--accent); }
+.tv-note { min-height: 18px; margin: 0; font-size: 13px; line-height: 1.45; color: #ffb4a8; }
+.tv-actions { display: flex; gap: 10px; justify-content: flex-end; }
+.tv-actions button { padding: 9px 18px; font: 600 14px/1 var(--text); color: #fff; background: var(--btn); border: 0; cursor: pointer; }
+.tv-actions button[type="submit"] { background: var(--accent); }
+/* Six switches and the readout no longer fit across a narrow phone. */
+@media (max-width: 420px) {
+  #corner { flex-wrap: wrap; justify-content: flex-end; max-width: calc(100vw - 24px); }
+}
+</style>
 <script type="importmap">{"imports":{
   "three":"./vendor/three/three.module.min.js",
   "@engine/":"./engine/",
@@ -31,9 +104,9 @@
 <section id="pages">
   <h1 class="plain-title">Neil's Home</h1>
 
-  <article class="page" data-station="blog" data-icon="blog" data-embed="./assets/demo-site.html">
-    <h2 data-en="Website">个人主页</h2>
-    <p><a href="./assets/demo-site.html" data-en="Open my website">打开个人主页</a></p>
+  <article class="page" data-station="blog" data-icon="blog" data-embed="https://1plus.me">
+    <h2 data-en="Blog">博客</h2>
+    <p><a href="https://1plus.me" target="_blank" rel="noopener">1plus.me</a></p>
   </article>
 
   <article class="page" data-station="about">
@@ -73,7 +146,10 @@
     <h2 data-en="Follow">关注</h2>
     <ul class="contact">
       <li data-app="github"><span>GitHub</span><a href="https://github.com/moersou" target="_blank" rel="noopener">moersou</a><p data-en="Code and side projects">代码和小项目</p></li>
+      <li data-app="telegram"><span>Telegram</span><a href="https://t.me/neilzee" target="_blank" rel="noopener">@neilzee</a><p data-en="Message me on Telegram">Telegram 找我</p></li>
+      <li data-app="whatsapp"><span>WhatsApp</span><a href="https://wa.me/447566770755?text=hey%20there" target="_blank" rel="noopener">+44 7566 770755</a><p data-en="Or on WhatsApp">或者 WhatsApp</p></li>
       <li data-app="mail"><span data-en="Email">邮件</span><a href="mailto:helloneilzee@gmail.com">helloneilzee@gmail.com</a><p data-en="Say hi">打个招呼</p></li>
+      <li data-app="apple-music"><span>Apple Music</span><a>Neil</a><p data-en="What is playing at home">家里在放什么</p></li>
     </ul>
   </article>
 
@@ -106,6 +182,39 @@ if (location.protocol === 'file:') {
 }
 </script>
 <noscript><style>#world,#hud,#loading{display:none}#pages{display:block}</style></noscript>
+<!-- The temperature readout beside the weather symbol. It mirrors the badge the
+     engine keeps on #moodButton, so the engine stays untouched. -->
+<script>
+(() => {
+  const panel = document.createElement('output');
+  panel.id = 'tempPanel';
+  panel.hidden = true;
+  panel.setAttribute('aria-hidden', 'true');
+  let sync = () => {};
+  function mount() {
+    const button = document.getElementById('moodButton');
+    const badge = button?.querySelector('b');
+    if (!button || !badge) return false;
+    button.after(panel);
+    sync = () => {
+      const value = badge.textContent.trim();
+      panel.textContent = value ? value.replace('°', '°C') : '';
+      panel.hidden = !value;
+    };
+    new MutationObserver(sync).observe(badge, { childList: true, characterData: true, subtree: true });
+    sync();
+    return true;
+  }
+  if (!mount()) {
+    const waiting = new MutationObserver(() => { if (mount()) waiting.disconnect(); });
+    waiting.observe(document.documentElement, { childList: true, subtree: true });
+  }
+})();
+</script>
 <script type="module" src="./engine/main.js"></script>
+<!-- Background music and the phone's own apps: see assets/music.js and
+     assets/phone.js, configured by home.config.js `music` and `tracks`. -->
+<script type="module" src="./assets/music.js"></script>
+<script type="module" src="./assets/phone.js"></script>
 </body>
 </html>

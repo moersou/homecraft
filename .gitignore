@@ -6,3 +6,7 @@ tools/.check/
 tools/.serve-url
 .impeccable/
 .release/
+
+# The background track is a commercial recording, so it stays on this machine.
+# Run `git add -f assets/music/theme.m4a` if you mean to publish it.
+assets/music/
