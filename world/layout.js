@@ -51,7 +51,11 @@ export const MAILBOX = { x: 5.0, z: 19.3, yaw: 0 };
 // The portal to other worlds, on the lawn between the mailbox and the pool. It
 // faces the house (yaw π; 0 would face the sea), so from the terrace you walk
 // up to its face with the sea behind it, and visitors step out towards the house.
-export const PORTAL = { x: 8.5, z: 25.5, yaw: Math.PI };
+//
+// Off for now: the lawn is empty and nothing is drawn, walked into or pressed at.
+// Set PORTAL back to the object below and its station returns with it.
+export const PORTAL = null;
+// export const PORTAL = { x: 8.5, z: 25.5, yaw: Math.PI };
 // A two-block door in the garage's north wall, out to the back and the mountain.
 export const BACKDOOR = { x0: 13, x1: 15 };
 
@@ -76,7 +80,8 @@ export const STATIONS = [
   // On the terrace; the phone's mail card opens it too.
   { id: 'mailbox', name: '留言', en: 'Mailbox', icon: 'mail', at: [MAILBOX.x, MAILBOX.z + 1.2], look: [MAILBOX.x, MAILBOX.z] },
   // In front of the portal: walk in, click it, or press F here, to visit other worlds.
-  { id: 'portal', name: '传送门', en: 'Portal', icon: 'portal', at: [PORTAL.x + Math.sin(PORTAL.yaw) * 2.4, PORTAL.z + Math.cos(PORTAL.yaw) * 2.4], look: [PORTAL.x, PORTAL.z] },
+  // Kept beside PORTAL above, so the two come back together.
+  ...(PORTAL ? [{ id: 'portal', name: '传送门', en: 'Portal', icon: 'portal', at: [PORTAL.x + Math.sin(PORTAL.yaw) * 2.4, PORTAL.z + Math.cos(PORTAL.yaw) * 2.4], look: [PORTAL.x, PORTAL.z] }] : []),
 ];
 
 const inside = (r, x, z) => x >= r.x0 && x < r.x1 && z >= r.z0 && z < r.z1;
