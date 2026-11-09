@@ -7,6 +7,11 @@
 // the view back.
 import * as THREE from 'three';
 import * as L from '@world/layout.js';
+import { config } from '../config.js';
+
+// home.config.js `look` turns the first-person drag round for anyone who reads
+// it the other way; third person keeps the orbit it has always had.
+const LOOK = { invertX: false, invertY: false, ...(config.look || {}) };
 
 const HOUSE = L.HOUSE || null, SECRET = L.SECRET || null, LOFT = L.LOFT || null, POOL = L.POOL || null;
 const inHouse = HOUSE ? (x, z) => x >= HOUSE.x0 && x < HOUSE.x1 && z >= HOUSE.z0 && z < HOUSE.z1 : () => false;
@@ -48,8 +53,8 @@ export function createRig(camera, world) {
       return;
     }
     if (firstPerson) {
-      yawGoal -= dx * 0.0042;
-      lookPitch = THREE.MathUtils.clamp(lookPitch - dy * 0.0036, -1.35, 1.35);
+      yawGoal -= (LOOK.invertX ? -dx : dx) * 0.0042;
+      lookPitch = THREE.MathUtils.clamp(lookPitch - (LOOK.invertY ? -dy : dy) * 0.0036, -1.35, 1.35);
       return;
     }
     yawGoal -= dx * 0.0052;
@@ -61,10 +66,14 @@ export function createRig(camera, world) {
     distanceGoal = THREE.MathUtils.clamp(distanceGoal * f, 3.2, 34);
   }
 
-  // Entering first person looks where the player faces; leaving puts the camera behind them.
-  function setFirstPerson(on, heading) {
-    if (on && heading !== undefined) yaw = yawGoal = heading + Math.PI;
-    if (on) lookPitch = -0.12;
+  // Third person and first person share one yaw: the follow camera looks at the
+  // player from azimuth `yaw`, which is the same direction first person looks
+  // along. So entering the eyes keeps whatever the visitor was already looking
+  // at instead of swinging the view round to the avatar's back, and leaving
+  // hands the same pitch back to the orbit.
+  function setFirstPerson(on) {
+    if (on) lookPitch = THREE.MathUtils.clamp(-pitch, -1.35, 1.35);
+    else pitchGoal = THREE.MathUtils.clamp(-lookPitch, 0.06, 1.38);
     firstPerson = on;
   }
 
@@ -243,7 +252,8 @@ export function createRig(camera, world) {
       intro = null; gazeT = 0; lying = false;
       focus.set(player.pos.x, player.y + 1.25, player.pos.z);
       reach = Infinity;
-      if (firstPerson) setFirstPerson(true, player.heading);
+      // A jump or a portal always faces the player forward, even in the eyes.
+      if (firstPerson) { yaw = yawGoal = player.heading + Math.PI; lookPitch = -0.12; }
       else if (faceStation) yaw = yawGoal = player.heading + Math.PI;
       update(1 / 60, player);
     },
