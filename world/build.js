@@ -9,6 +9,7 @@ import { buildMountain } from './mountain.js';
 import { buildRoofAccess } from './roof-access.js';
 import { createStainless } from './stainless.js';
 import { createVertec } from './vertec.js';
+import { createTv } from './tv.js';
 import { ISLAND, FOREST, COURT, RIM } from './layout.js';
 
 export function build({ grid, layer, materials, stage }) {
@@ -54,10 +55,12 @@ function drawMap(ctx, X, Z, PPM) {
 export function setup({ stage, world, player, avatar, sound }) {
   const vertec = createVertec({ avatar, sound });
   stage.scene.add(vertec.mesh);
+  const tv = createTv({ stage, world });
   return {
     update(dt) {
       vertec.update(dt, player);
       world.outer.update(dt, stage.camera);
+      tv?.update(dt);
     },
   };
 }

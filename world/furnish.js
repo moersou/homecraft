@@ -6,6 +6,7 @@ import { canvasTexture } from '@engine/world/textures.js';
 import * as P from './paint.js';
 import { createCar } from './car.js';
 import { buildFloorPlants } from './plants.js';
+import { hangPhotos, PHOTOS } from './gallery.js';
 import { HOUSE, COURT, RIM, VERTEC, LOFT, STAIRS, SECRET, GARAGE, POOL, POOL_LAMPS, ENTRANCE, BACKDOOR, ROOF_GLASS, TERRACE, DRIVEWAY } from './layout.js';
 
 const L = {
@@ -299,6 +300,15 @@ export function furnish({ layer }) {
   B.box(pegX, 1.1, pegFace - pegDepth / 2, 3.6, 2.2, pegDepth, L.steel, { tag: 'work-wall-pegboard' });
   plane(3.6, 2.2, paint(1080, 660, P.paintPegboard), pegX, 2.2, pegFace + .005);
   hot('works', 2, 0, -9.7, 7.3, 3.4, 4.5);
+
+  // The owner's photographs, on the blank panelling above the pegboard. The
+  // wall reflows as prints are added: see world/gallery.js.
+  hangPhotos({
+    photos: PHOTOS,
+    box: (x, y, z, w, h, d) => B.box(x, y, z, w, h, d, L.wood),
+    plane,
+    x0: -1.6, x1: 9.8, bottom: 3.72, z: -11.85, frameZ: -11.91,
+  });
 
   // Three framed keepsakes remain as decoration, without an interactive page.
   B.box(7.7, 0, -11.6, 3.4, 0.65, 0.6, L.wood); foot(7.7, -11.6, 3.5, 0.7);
