@@ -20,9 +20,6 @@ export default {
   // Both Live on every visit: the real time of day, and the city's weather.
   // Visitors can still pick a fixed sky from the corner menu.
   start: { weather: 'auto', time: 'auto' },
-  // First-person drag. Flip an axis here if the eyes feel backwards; third
-  // person orbiting is not affected.
-  look: { invertX: false, invertY: false },
   dock: ['blog', 'about', 'mailbox', 'phone'],
   mailbox: { endpoint: '', email: 'helloneilzee@gmail.com', turnstileSitekey: '' },
   badge: true,
