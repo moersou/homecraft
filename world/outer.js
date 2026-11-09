@@ -12,6 +12,7 @@ const WARM = { tex: 'paint', tint: 0xffd8a0, emissive: 0.85 };
 export function buildOuter(layer, materials) {
   const root = new THREE.Group(); root.name = 'shore';
   const ground = [];
+  const lamps = [];
   let B = null, boat = null;
   const box = (x, y, z, w, h, d, look, opts = {}) => B.box(x, y, z, w, h, d, look, { shadow: false, ...opts });
   const flat = (site, x, z, w, d, y) => ground.push({ site, x0: x - w / 2, x1: x + w / 2, z0: z - d / 2, z1: z + d / 2, y });
@@ -35,7 +36,12 @@ export function buildOuter(layer, materials) {
       for (let z = 0; z < P.length; z += 0.5) box(0, P.deck, z + 0.25, P.width, 0.08, 0.5, OAK);
       for (let z = 1; z < P.length; z += 2) for (const o of [-P.width / 2 + .1, P.width / 2 - .1]) box(o, -1.6, z, 0.16, 2.67, 0.16, WALNUT);
       for (const o of [-P.width / 2 + .1, P.width / 2 - .1]) box(o, P.deck + 0.85, P.length / 2 + 0.5, 0.06, 0.06, P.length - 1, WALNUT);
-      for (const o of [-P.width / 2 + .1, P.width / 2 - .1]) { box(o, P.deck, P.length - 0.3, 0.08, 1.8, 0.08, STEEL); box(o, P.deck + 1.8, P.length - 0.3, 0.24, 0.28, 0.24, WARM); }
+      for (const o of [-P.width / 2 + .1, P.width / 2 - .1]) {
+        box(o, P.deck, P.length - 0.3, 0.08, 1.8, 0.08, STEEL); box(o, P.deck + 1.8, P.length - 0.3, 0.24, 0.28, 0.24, WARM);
+        // The two lamp heads light the end of the pier and the moored boat. The
+        // batch is turned a quarter turn here, so local z runs west: x = P.x - z.
+        lamps.push({ id: 'pier-lamp', position: [P.x - (P.length - 0.3), P.deck + 1.94, P.z + o], power: 1.2, radius: 5.5 });
+      }
     });
     flat('pier', P.x - P.length / 2, P.z, P.length, P.width, P.deck + 0.08);
     // A small sailboat moored beside the end of the pier, bow out to sea.
@@ -59,6 +65,7 @@ export function buildOuter(layer, materials) {
   let t = 0, clock = 0, seen = true;
   return {
     group: root,
+    lamps,
     foot: { x: PIER.x + 1, z: PIER.z },
     levels(x, z, out) { if (x >= deck.x0 && x <= deck.x1 && z >= deck.z0 && z <= deck.z1) out.push(deck); },
     pick(ray) { return ray.intersectBox(deckBounds, hit) ? { t: hit.distanceTo(ray.origin), point: hit.clone(), site: 'pier' } : null; },

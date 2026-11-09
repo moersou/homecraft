@@ -480,7 +480,7 @@ export function buildMountain(layer, materials) {
   // ---------- Planting, stones and the built pieces ----------
   const B = new BoxBatch(layer);
   const box = (x, y, z, w, h, d, look, opts = {}) => B.box(x, y, z, w, h, d, look, { shadow: false, ...opts });
-  const solids = [], solidIndex = new Map();
+  const solids = [], solidIndex = new Map(), lamps = [];
   function solid(x, z, w, d, y0, h) {
     const b = { x0: x - w / 2, x1: x + w / 2, z0: z - d / 2, z1: z + d / 2, y0, y1: y0 + h };
     solids.push(b);
@@ -524,12 +524,16 @@ export function buildMountain(layer, materials) {
     if (random() < .6) box(x + s * .45, y - .2, z + s * .3, s * .55, .3 * s + .2, s * .5, { tex: 'stone', tint: lift(tint, .94) }, { ry: random() * 1.5 });
     solid(x, z, s * .9, s * .8, y - .3, .45 * s + .3);
   }
-  // Black steel path lights, as on the house.
+  // Black steel path lights, as on the house. The post reaches down to the
+  // ground it stands on, so a lamp on a slope is never left in the air, and its
+  // head is a baked light source: the stairs stay walkable after dark.
   function bollard(x, y, z) {
-    box(x, y - .2, z, .15, 1.02, .15, STEEL);
+    const foot_ = Math.min(y, Math.max(heightAt(x, z), 0)), height = y + 1.02 - foot_;
+    box(x, foot_ - .2, z, .15, height, .15, STEEL);
     box(x, y + .72, z, .19, .13, .19, LIGHT);
     box(x, y + .85, z, .23, .05, .23, STEEL);
-    solid(x, z, .2, .2, y - .2, 1.1);
+    solid(x, z, .2, .2, foot_ - .2, height + .2);
+    lamps.push({ id: 'path-bollard', position: [x, y + .78, z], power: 1.3, radius: 5.5 });
   }
   // An oak seat on two black steel frames, its length along `ry`.
   function bench(x, y, z, ry) {
@@ -563,6 +567,24 @@ export function buildMountain(layer, materials) {
     if (v.turn < 1.3) continue;
     const ox = v.in.x - v.out.x, oz = v.in.z - v.out.z, l = Math.hypot(ox, oz);
     bollard(v.x + ox / l * (v.R - .3), v.y, v.z + oz / l * (v.R - .3));
+  }
+  // Two on the lawn below the trailhead, so the walk out from the house is lit
+  // too. Off the mountain the island's own ground stands at zero.
+  for (const [x, z] of [[3.3, -19.2], [6.7, -16.2]]) bollard(x, Math.max(0, heightAt(x, z)), z);
+  // A post every seven metres of the straight flights, on whichever side has
+  // ground close enough to stand on, clear of the two-metre stair.
+  for (const f of flights) {
+    for (let s = 3; s < f.length - 1.5; s += 7) {
+      const y = treadAt(f, s);
+      let spot = null;
+      for (const a of [half + .34, -half - .34]) {
+        const x = f.x + f.d.x * s + f.px * a, z = f.z + f.d.z * s + f.pz * a;
+        const drop = y - Math.max(heightAt(x, z), 0);
+        if (drop > 2.2 || (spot && Math.abs(drop) >= Math.abs(spot.drop))) continue;
+        spot = { x, z, drop };
+      }
+      if (spot) bollard(spot.x, y, spot.z);
+    }
   }
   // Low kerbs where the ground falls away beside the stairs. Off the
   // mountain the island's own ground is level with the first steps.
@@ -615,6 +637,8 @@ export function buildMountain(layer, materials) {
       box(sx + a * (half - .15), (tipY + footY) / 2 - .07, (tipZ + footZ) / 2, .12, .14, l, STEEL, { rx: Math.atan2(-dy, dz) });
       solid(sx + a * (half - .02), (n0 - .5 + n1) / 2, .1, n0 - .5 - n1, fy, 1);
     }
+    // The lit edge is the walkway's light: it shows the glass underfoot.
+    for (const a of [-1, 1]) lamps.push({ id: 'summit-walk', position: [sx + a * (half - .13), fy + .45, (n0 + n1) / 2], power: 1.05, radius: 4.5 });
     for (let z = n0 - .5; z >= n1 - .01; z -= 1.65) for (const a of [-1, 1]) box(sx + a * (half - .02), fy - .1, z, .05, 1.1, .05, STEEL);
     box(sx, fy, n1 + .02, WIDTH, .95, .03, GLASS);
     box(sx, fy + .95, n1 + .02, WIDTH + .06, .05, .06, STEEL);
@@ -821,6 +845,7 @@ export function buildMountain(layer, materials) {
   return {
     group: root, levels, obstructed, collides, pick, viewBlock, heightAt: topAt, route,
     trailhead: { x: pts[0].x, z: pts[0].z },
+    lamps,
     spots: () => [{ x: pts[0].x, z: pts[0].z }, { x: top.x, z: top.z + 1.5 }],
   };
 }

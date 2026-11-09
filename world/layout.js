@@ -105,8 +105,11 @@ export const FOREST = [
   [-33,-4],[-34,20],[-13,-17],[22,-21],[-22,-23],[-18,-17],
 ];
 
-// The baked lamp light covers the house (min corner, size in metres, texels).
-export const LIGHT_VOLUME = { min: [-22, -1, -14], extent: [48, 12, 40], size: [48, 16, 40] };
+// The baked lamp light covers the island, the pier and the path up the mountain
+// (min corner, size in metres, texels). The house sets the metre grid; the climb
+// to the summit needs the volume thirty metres tall, so its texels are two
+// metres high and a metre across.
+export const LIGHT_VOLUME = { min: [-46, -1, -84], extent: [88, 32, 116], size: [88, 16, 116] };
 // The weather's shelter map covers the island, the mountain and the pier.
 export const SHELTER = { x0: -64, z0: -80, w: 128, d: 128 };
 // Flying out of the house goes through the front doors.

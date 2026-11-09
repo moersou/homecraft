@@ -6,7 +6,7 @@ import { canvasTexture } from '@engine/world/textures.js';
 import * as P from './paint.js';
 import { createCar } from './car.js';
 import { buildFloorPlants } from './plants.js';
-import { HOUSE, COURT, RIM, VERTEC, LOFT, STAIRS, SECRET, GARAGE, POOL, POOL_LAMPS, ENTRANCE, BACKDOOR, ROOF_GLASS } from './layout.js';
+import { HOUSE, COURT, RIM, VERTEC, LOFT, STAIRS, SECRET, GARAGE, POOL, POOL_LAMPS, ENTRANCE, BACKDOOR, ROOF_GLASS, TERRACE, DRIVEWAY } from './layout.js';
 
 const L = {
   // Two interior wood finishes: the existing floor and the wall-panel timber.
@@ -516,6 +516,17 @@ export function furnish({ layer }) {
   B.box(-13, .86, 19, .13, .25, .13, L.steel);
   B.box(-13, 1.08, 19, .3, .065, .3, L.light(0xffe4ba));
   bake('terrace-table', -13, 1.1, 19, .65, 3.2);
+  // Black steel ground bollards along the terrace edge and the drive, the same
+  // fitting as the ones up the mountain: after dark the grounds are walkable.
+  function bollard(x, z) {
+    B.box(x, -.2, z, .15, 1.02, .15, L.steel);
+    B.box(x, .72, z, .19, .13, .19, L.light(0xffe4ba));
+    B.box(x, .85, z, .23, .05, .23, L.steel);
+    foot(x, z, .2, .2);
+    bake('ground-bollard', x, .78, z, 1.15, 5.4);
+  }
+  for (const x of [-19, -7, 7, 19]) bollard(x, TERRACE.z1 + .6);
+  for (const z of [-9, -6.2, -3.4]) bollard(DRIVEWAY.x1 - .6, z);
   // A static, flush sea-facing crest replaces the raised one-metre coping.
   // Its top meets the water; the submerged island edge leaves no land in front.
   B.box((POOL.x0 + POOL.x1) / 2, POOL.bed, POOL.z1 + .06, POOL.x1 - POOL.x0, POOL.water - POOL.bed, .12,
