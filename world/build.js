@@ -10,7 +10,7 @@ import { buildRoofAccess } from './roof-access.js';
 import { createStainless } from './stainless.js';
 import { createVertec } from './vertec.js';
 import { createTv } from './tv.js';
-import { ISLAND, FOREST, COURT, RIM } from './layout.js';
+import { ISLAND, FOREST, HALL, STAGE, PIANO } from './layout.js';
 
 export function build({ grid, layer, materials, stage }) {
   // The kitchen's brushed steel is a real metal, with its own room reflection.
@@ -33,21 +33,19 @@ export function build({ grid, layer, materials, stage }) {
   };
 }
 
-// The half court on the radar, painted as it is on the floor.
+// The music hall on the radar: its floor, the stage against the west wall and
+// the grand piano standing on it.
 function drawMap(ctx, X, Z, PPM) {
-  ctx.fillStyle = '#2b2e31';
-  ctx.fillRect(X(COURT.x0 - 1), Z(COURT.z0 - 1), (COURT.x1 - COURT.x0 + 2) * PPM, (COURT.z1 - COURT.z0 + 2) * PPM);
-  ctx.fillStyle = '#d9ae76';
-  ctx.fillRect(X(COURT.x0), Z(COURT.z0), (COURT.x1 - COURT.x0) * PPM, (COURT.z1 - COURT.z0) * PPM);
-  ctx.fillStyle = '#b92d28';
-  ctx.fillRect(X(COURT.x0), Z(RIM.z - 2.45), 5.8 * PPM, 4.9 * PPM);
-  ctx.strokeStyle = '#ffffff';
-  ctx.lineWidth = 1.5;
-  ctx.beginPath();
-  const courtSide = Math.min((COURT.z1 - COURT.z0) / 2 - 0.9, 6.7);
-  ctx.arc(X(RIM.x), Z(RIM.z), 6.75 * PPM, -Math.asin(courtSide / 6.75), Math.asin(courtSide / 6.75));
-  ctx.stroke();
-  ctx.strokeRect(X(COURT.x0), Z(COURT.z0), (COURT.x1 - COURT.x0) * PPM, (COURT.z1 - COURT.z0) * PPM);
+  ctx.fillStyle = '#3a2c1f';
+  ctx.fillRect(X(HALL.x0), Z(HALL.z0), (HALL.x1 - HALL.x0) * PPM, (HALL.z1 - HALL.z0) * PPM);
+  ctx.fillStyle = '#8a6238';
+  ctx.fillRect(X(HALL.x0 + 0.3), Z(HALL.z0 + 0.3), (HALL.x1 - HALL.x0 - 0.6) * PPM, (HALL.z1 - HALL.z0 - 0.6) * PPM);
+  ctx.fillStyle = '#26190f';
+  ctx.fillRect(X(STAGE.x0), Z(STAGE.z0), (STAGE.x1 - STAGE.x0) * PPM, (STAGE.z1 - STAGE.z0) * PPM);
+  ctx.fillStyle = '#0d0e11';
+  ctx.fillRect(X(PIANO.x - 1.05), Z(PIANO.z - 0.78), 2.2 * PPM, 1.56 * PPM);
+  ctx.fillStyle = '#c8bda4';
+  ctx.fillRect(X(PIANO.x + 0.95), Z(PIANO.z - 0.7), 0.3 * PPM, 1.4 * PPM);
 }
 
 // The moving parts the engine does not know about: the Vertec in the gym

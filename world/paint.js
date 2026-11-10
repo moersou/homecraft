@@ -1,4 +1,4 @@
-// Pixel art painted onto canvases: the court, the screens, the frames on the
+// Pixel art painted onto canvases: the hall floor, the screens, the frames on the
 // honours wall, the mural. Everything is drawn at 16 or 32 px per metre so it
 // sits at the same resolution as the blocks around it.
 import { rng } from '@engine/world/textures.js';
@@ -320,74 +320,37 @@ function shadeHex(hex, amount) {
   return '#' + ((c(n >> 16) << 16) | (c((n >> 8) & 255) << 8) | c(n & 255)).toString(16).padStart(6, '0');
 }
 
-// The half court, apron included. World extents: x ∈ [-20, -4], z ∈ [-7.5, 9.5].
-export function paintCourt(ctx, w, h, { court, rim, origin }) {
+// The music hall's floor, apron included. World extents: x ∈ [-20, -4], z ∈ [-7.5, 9.5].
+// Walnut boards with a pale inlay band, so the open floor reads as a hall rather
+// than as continuation of the living room.
+export function paintHall(ctx, w, h, { hall, origin }) {
   const S = 32;
   const X = x => Math.round((x - origin.x) * S), Z = z => Math.round((z - origin.z) * S);
-  ctx.fillStyle = '#25282b';
-  ctx.fillRect(0, 0, w, h);
-  // One quiet wood surface; the court markings carry the detail.
-  ctx.fillStyle = '#c6a071';
-  ctx.fillRect(X(court.x0), Z(court.z0), (court.x1 - court.x0) * S, (court.z1 - court.z0) * S);
-  // Grain is painted into this single surface, without separate plank meshes.
   const random = rng(5);
-  ctx.save(); ctx.beginPath();
-  ctx.rect(X(court.x0), Z(court.z0), (court.x1 - court.x0) * S, (court.z1 - court.z0) * S); ctx.clip();
-  for (let i = 0; i < 360; i++) {
-    const x = X(court.x0) + random() * (court.x1 - court.x0) * S;
-    const z = Z(court.z0) + random() * (court.z1 - court.z0) * S;
-    ctx.fillStyle = random() > .5 ? 'rgba(85,55,31,.06)' : 'rgba(248,230,184,.07)';
-    ctx.fillRect(x, z, 1, 12 + random() * 80);
+  planks(ctx, w, h, ['#6b4a30', '#5f412b', '#74522f'], '#3a2718', random);
+  // Grain: a few darker and lighter streaks across the boards.
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(X(hall.x0), Z(hall.z0), (hall.x1 - hall.x0) * S, (hall.z1 - hall.z0) * S);
+  ctx.clip();
+  for (let i = 0; i < 220; i++) {
+    const x = X(hall.x0) + random() * (hall.x1 - hall.x0) * S;
+    const z = Z(hall.z0) + random() * (hall.z1 - hall.z0) * S;
+    ctx.fillStyle = random() > .5 ? 'rgba(52,32,16,.07)' : 'rgba(226,200,158,.06)';
+    ctx.fillRect(x, z, 1, 10 + random() * 70);
   }
   ctx.restore();
-
-  const line = '#fbfaf6', paint = '#b92d28';
-  const lw = 2;
-  const cz = rim.z;
-  // Red key, warm maple and a dark surround, matching the supplied court.
-  ctx.fillStyle = paint;
-  ctx.fillRect(X(court.x0), Z(cz - 2.45), Math.round(5.8 * S), Math.round(4.9 * S));
-  const ring = (x, z, radius, from, to, filled = false) => {
-    const steps = 720;
-    for (let i = 0; i <= steps; i++) {
-      const a = from + (to - from) * (i / steps);
-      ctx.fillStyle = line;
-      if (filled) continue;
-      ctx.fillRect(Math.round(X(x + Math.cos(a) * radius) - lw / 2), Math.round(Z(z + Math.sin(a) * radius) - lw / 2), lw, lw);
-    }
-  };
-  ctx.fillStyle = line;
-  // Boundary and half-court line.
-  ctx.fillRect(X(court.x0), Z(court.z0), (court.x1 - court.x0) * S, lw);
-  ctx.fillRect(X(court.x0), Z(court.z1) - lw, (court.x1 - court.x0) * S, lw);
-  ctx.fillRect(X(court.x0), Z(court.z0), lw, (court.z1 - court.z0) * S);
-  ctx.fillRect(X(court.x1) - lw, Z(court.z0), lw, (court.z1 - court.z0) * S);
-  // Key outline and free-throw circle.
-  ctx.fillRect(X(court.x0), Z(cz - 2.45), Math.round(5.8 * S), lw);
-  ctx.fillRect(X(court.x0), Z(cz + 2.45) - lw, Math.round(5.8 * S), lw);
-  ctx.fillRect(X(court.x0 + 5.8) - lw, Z(cz - 2.45), lw, Math.round(4.9 * S));
-  ring(court.x0 + 5.8, cz, 1.8, -Math.PI / 2, Math.PI / 2);
-  for (let a = Math.PI / 2; a < Math.PI * 1.5; a += Math.PI / 10) ring(court.x0 + 5.8, cz, 1.8, a, a + Math.PI / 20);
-  // Three-point line: 6.75 m arc joined to straight corner lines 0.9 m in from the sidelines.
-  const r3 = 6.75, side = Math.min((court.z1 - court.z0) / 2 - 0.9, r3 - 0.05);
-  const corner = Math.sqrt(r3 * r3 - side * side);
-  ring(rim.x, cz, r3, -Math.asin(side / r3), Math.asin(side / r3));
-  ctx.fillStyle = line;
-  ctx.fillRect(X(court.x0), Z(cz - side) - 1, Math.round((rim.x + corner - court.x0) * S), lw);
-  ctx.fillRect(X(court.x0), Z(cz + side) - 1, Math.round((rim.x + corner - court.x0) * S), lw);
-  // Restricted area and centre circle.
-  ring(rim.x, cz, 1.25, -Math.PI / 2, Math.PI / 2);
-  ring(court.x1, cz, 1.8, Math.PI / 2, Math.PI * 1.5);
-}
-
-// Basketball net: white cord diamonds on transparent, wrapped around a cone.
-export function paintNet(ctx, w, h) {
-  ctx.clearRect(0, 0, w, h);
-  ctx.fillStyle = '#f4f4f0';
-  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
-    const a = (x + y) % 8 === 0, b = (x - y + 800) % 8 === 0;
-    if (a || b || y < 2) ctx.fillRect(x, y, 1, 1);
-  }
+  // Pale inlay band just inside the floor edge, and the same band flanking the stage.
+  const band = Math.round(0.16 * S);
+  ctx.fillStyle = '#c8bda4';
+  const w0 = X(hall.x0) + band, w1 = X(hall.x1) - band, d0 = Z(hall.z0) + band, d1 = Z(hall.z1) - band;
+  ctx.fillRect(w0, d0, w1 - w0, band);
+  ctx.fillRect(w0, d1 - band, w1 - w0, band);
+  ctx.fillRect(w0, d0, band, d1 - d0);
+  ctx.fillRect(w1 - band, d0, band, d1 - d0);
+  // A dark threshold where the hall meets the rest of the house.
+  ctx.fillStyle = 'rgba(40,26,14,.55)';
+  ctx.fillRect(X(hall.x1) - 3, Z(hall.z0), 3, (hall.z1 - hall.z0) * S);
 }
 
 export function paintBall(ctx, w, h) {

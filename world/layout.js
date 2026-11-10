@@ -7,10 +7,14 @@ export const ISLAND = { x0: -36, x1: 38, z0: -26, z1: 31 };
 // House interior; the walls occupy the ring of cells just outside it.
 export const HOUSE = { x0: -20, x1: 24, z0: -12, z1: 16, height: 10 };
 
-// Half court with the hoop on the west wall, seen side-on from the pool.
-export const COURT = { x0: -19, x1: -7, z0: -2.5, z1: 10.5 };
-// The rim and ball are scaled up with the blocky bodies, as the players' heads are.
-export const RIM = { x: -19.28, y: 3.05, z: (COURT.z0 + COURT.z1) / 2, r: 0.31 };
+// An open music hall on the west side of the house, seen side-on from the pool:
+// a low stage against the panelled west wall, a grand piano on it, and benches
+// facing the stage. Nothing encloses it, so the hall reads as part of the house.
+export const HALL = { x0: -19, x1: -7, z0: -2.5, z1: 10.5 };
+// The stage deck, low enough to walk onto without a stair.
+export const STAGE = { x0: -19.95, x1: -14.6, z0: -2.2, z1: 9.4, y: 0.14 };
+// The piano sits with its keyboard towards the audience; yaw 0 faces east (+x).
+export const PIANO = { x: -17.2, z: 3.6, yaw: 0 };
 // A Vertec at the east edge of the gym, past the treadmill, against the south
 // wall: its pole, and the vanes reaching north (yaw π/2) over open floor, so
 // there is a clear run-up to jump from.
@@ -18,7 +22,7 @@ export const VERTEC = { x: -5.6, z: 15.05, yaw: Math.PI / 2 };
 
 // A full-floor master suite, reached by a broad stair along its east edge.
 export const LOFT = { x0: -20, x1: -3, z0: -12, z1: -4, y: 4 };
-// A broad straight stair beside the court, rising north into the mezzanine.
+// A broad straight stair beside the hall, rising north into the mezzanine.
 // Eight metres of run for four metres of rise replaces the old 45-degree ladder.
 export const STAIRS = { x0: -6.8, x1: -3, z0: -4, z1: 4 };
 // Four large flush glass fields around a broad cross-shaped roof promenade.
@@ -69,7 +73,7 @@ export const STATIONS = [
   // From the south end of the lounge rug: sofa, TV and fireplace stay in view.
   // Standing between the sofa and the table put the sofa back across the frame.
   { id: 'about', name: '关于我', en: 'About me', at: [1.0, -0.3], look: [1.0, -6] },
-  { id: 'court', name: '球场', en: 'Court', at: [-12, RIM.z], look: [RIM.x, RIM.z] },
+  { id: 'music', name: '音乐厅', en: 'Music hall', at: [-11.9, 3.6], look: [PIANO.x + 1, PIANO.z], page: false },
   { id: 'lab', name: '车库', en: 'Garage', at: [13.4, -1.2], look: [15.5, -6.5] },
   { id: 'coffee', name: '咖啡吧', en: 'Coffee bar', at: [8, 13.3], look: [8, 14.8] },
   { id: 'pool', name: '泳池', en: 'Pool', at: [-5, 22.6], look: [-5, 27] },

@@ -123,7 +123,7 @@ function northWall(x, y) {
 }
 
 function westWall(z, y) {
-  if (z >= -3 && z < 7) return true; // behind the hoop and scoreboard
+  if (z >= -3 && z < 7) return true; // solid behind the music hall's slat wall
   return !clerestory(z, y);
 }
 

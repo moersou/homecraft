@@ -7,7 +7,7 @@ import * as P from './paint.js';
 import { createCar } from './car.js';
 import { buildFloorPlants } from './plants.js';
 import { hangPhotos, PHOTOS } from './gallery.js';
-import { HOUSE, COURT, RIM, VERTEC, LOFT, STAIRS, SECRET, GARAGE, POOL, POOL_LAMPS, ENTRANCE, BACKDOOR, ROOF_GLASS, TERRACE, DRIVEWAY } from './layout.js';
+import { HOUSE, HALL, STAGE, PIANO, VERTEC, LOFT, STAIRS, SECRET, GARAGE, POOL, POOL_LAMPS, ENTRANCE, BACKDOOR, ROOF_GLASS, TERRACE, DRIVEWAY } from './layout.js';
 
 const L = {
   // Two interior wood finishes: the existing floor and the wall-panel timber.
@@ -118,26 +118,103 @@ export function furnish({ layer }) {
     light.position.set(x, 4, z); light.userData = { base: power, day: 0.15, priority: 1 }; lights.push(light);
   }
 
-  // Court as a display: painted lines and a static hoop, no ball or physics.
-  const courtW = COURT.x1 - COURT.x0 + 2, courtD = COURT.z1 - COURT.z0 + 2;
-  const court = plane(courtW, courtD, paint(courtW * 32, courtD * 32, (ctx, w, h) => P.paintCourt(ctx, w, h, { court: COURT, rim: RIM, origin: { x: COURT.x0 - 1, z: COURT.z0 - 1 } })), (COURT.x0 + COURT.x1) / 2, 0.014, RIM.z, 0, false, -Math.PI / 2);
-  court.name = 'court-floor';
-  B.box(-19.93, 2.7, RIM.z, 0.12, 1.35, 2.25, L.paint(0x293138));
-  for (const z of [RIM.z - 1.125, RIM.z + 1.125]) B.box(-19.845, 2.7, z, 0.035, 1.35, 0.045, L.paint(0x67737a));
-  for (const y of [2.7, 4.01]) B.box(-19.845, y, RIM.z, 0.035, 0.045, 2.25, L.paint(0x67737a));
-  for (const z of [RIM.z - 0.38, RIM.z + 0.38]) B.box(-19.84, 3.03, z, 0.035, 0.57, 0.035, L.paint(0xf2f0e7));
-  for (const y of [3.03, 3.565]) B.box(-19.84, y, RIM.z, 0.035, 0.035, 0.76, L.paint(0xf2f0e7));
-  B.box((RIM.x - 19.82) / 2, RIM.y - 0.035, RIM.z, RIM.x + 19.82, 0.06, 0.08, L.paint(0xc87640));
-  const ring = new THREE.Mesh(new THREE.TorusGeometry(RIM.r, 0.035, 4, 12), new THREE.MeshLambertMaterial({ color: 0xc87640 }));
-  ring.rotation.x = Math.PI / 2; ring.position.set(RIM.x, RIM.y, RIM.z); planes.push(ring);
-  const net = new THREE.Mesh(new THREE.CylinderGeometry(RIM.r, RIM.r * 0.7, 0.5, 8, 1, true), new THREE.MeshLambertMaterial({ map: paint(32, 16, P.paintNet), alphaTest: 0.5, side: THREE.DoubleSide }));
-  net.position.set(RIM.x, RIM.y - 0.25, RIM.z); planes.push(net);
-  // The clock sits directly above the backboard, entirely on solid wall
-  // with a clear gap before the window at z = 7. Keep its frame and face together.
-  const clockZ = RIM.z;
-  B.box(-19.9, 4.45, clockZ, 0.2, 1.95, 4.06, L.steel);
-  surfaces.scoreboard = { position: [-19.79, 5.424, clockZ], rotation: Math.PI / 2, width: 3.96, height: 1.848 };
-  hot('court', (COURT.x0 + COURT.x1) / 2, 0, RIM.z, COURT.x1 - COURT.x0, 0.1, COURT.z1 - COURT.z0);
+  // An open music hall where the half court used to be: a walnut stage against
+  // the panelled west wall, a grand piano on it, and benches facing the stage.
+  // Nothing walls it off, so it stays part of the room, lit by the roof glass.
+  const hallW = HALL.x1 - HALL.x0, hallD = HALL.z1 - HALL.z0;
+  const hall = plane(hallW, hallD, paint(hallW * 32, hallD * 32, (ctx, w, h) => P.paintHall(ctx, w, h, { hall: HALL, origin: { x: HALL.x0, z: HALL.z0 } })), (HALL.x0 + HALL.x1) / 2, 0.014, (HALL.z0 + HALL.z1) / 2, 0, false, -Math.PI / 2);
+  hall.name = 'hall-floor';
+  // The stage: a low walnut deck with a dark fascia and a brass nosing, low
+  // enough to walk onto, so the piano never blocks the way in.
+  const stageW = STAGE.x1 - STAGE.x0, stageD = STAGE.z1 - STAGE.z0;
+  const stageX = (STAGE.x0 + STAGE.x1) / 2, stageZ = (STAGE.z0 + STAGE.z1) / 2;
+  B.box(stageX, 0, stageZ, stageW, STAGE.y, stageD, { tex: 'walnut' });
+  B.box(STAGE.x1 - 0.045, 0, stageZ, 0.09, STAGE.y, stageD, L.paint(0x1a1512));
+  B.box(STAGE.x1 - 0.045, STAGE.y - 0.012, stageZ, 0.11, 0.024, stageD, L.paint(0xb08d4a));
+  // Acoustic slats on the wall behind the stage, over a dark backing.
+  const backZ0 = -1.9, backZ1 = 9.1;
+  B.box(-19.95, 0, (backZ0 + backZ1) / 2, 0.06, 4.3, backZ1 - backZ0, L.paint(0x1e1712));
+  for (let z = backZ0 + 0.2; z < backZ1 - 0.1; z += 0.38) B.box(-19.87, 0, z, 0.11, 4.3, 0.22, { tex: 'oak' });
+  for (const z of [-1.62, 8.82]) B.box(-19.9, 0, z, 0.1, 4.3, 0.1, L.steel);
+
+  // The grand piano: satin black case with a stepped wing, an open lid, three
+  // legs on casters, pedals and ivory keys. Purely static and batched, except
+  // the lid, which is one plane on a hinge of its own.
+  const ebony = L.paint(0x141519), ebonyEdge = L.paint(0x2d3037), brass = L.paint(0xb08d4a);
+  const ivory = L.paint(0xf1ead9), keyBlack = L.paint(0x101114);
+  const piano = (x, z, yaw) => B.at(x, STAGE.y, z, yaw, () => {
+    // The wing, tail first: five steps along the straight bass side.
+    for (const [x0, x1, z0, z1] of [
+      [-1.05, -0.70, -0.78, -0.18],
+      [-0.70, -0.30, -0.78, 0.06],
+      [-0.30, 0.10, -0.78, 0.34],
+      [0.10, 0.55, -0.78, 0.60],
+      [0.55, 0.95, -0.78, 0.78],
+    ]) B.box((x0 + x1) / 2, 0.60, (z0 + z1) / 2, x1 - x0, 0.33, z1 - z0, ebony);
+    // Keyboard end: key bed, ivory keys and the black keys in their mixed groups.
+    B.box(1.10, 0.60, 0, 0.30, 0.13, 1.56, ebony);
+    B.box(1.07, 0.73, 0, 0.24, 0.022, 1.44, ivory);
+    const keyW = 1.44 / 14;
+    for (let octave = 0; octave < 2; octave++) for (const i of [0, 1, 3, 4, 5]) {
+      const kz = -0.72 + (octave * 7 + i + 1) * keyW;
+      B.box(1.0, 0.752, kz, 0.12, 0.02, keyW * 0.58, keyBlack);
+    }
+    B.box(1.14, 0.60, 0, 0.12, 0.05, 1.44, ebonyEdge);
+    // Music desk with a white sheet on it, leaning back towards the strings.
+    B.box(0.60, 0.93, 0, 0.05, 0.34, 1.0, ebony, { rz: 0.2 });
+    B.box(0.575, 0.99, 0, 0.02, 0.24, 0.62, L.paint(0xefe9dc), { rz: 0.2 });
+    // Three legs with brass casters, and the pedals under the keys.
+    for (const [lx, lz] of [[0.82, -0.58], [0.82, 0.58], [-0.76, -0.54]]) {
+      B.box(lx, 0, lz, 0.13, 0.60, 0.13, ebony);
+      B.box(lx, 0, lz, 0.085, 0.06, 0.085, brass);
+    }
+    for (const pz of [-0.14, 0, 0.14]) B.box(1.16, 0.05, pz, 0.18, 0.028, 0.055, brass);
+    // The prop stick reaches the open lid just above the strings.
+    B.box(0.55, 0.94, -0.075, 0.045, 0.90, 0.045, ebony, { rx: 0.167 });
+  });
+  piano(PIANO.x, PIANO.z, PIANO.yaw);
+  foot(PIANO.x, PIANO.z, 2.5, 1.8);
+  // The lid, hinged along the straight bass side and propped open over the case.
+  const lid = new THREE.Group();
+  lid.position.set(PIANO.x, STAGE.y + 0.94, PIANO.z);
+  lid.rotation.y = PIANO.yaw;
+  const lidGeo = new THREE.PlaneGeometry(1.94, 1.36);
+  lidGeo.translate(0, 0.68, 0);
+  const lidMesh = new THREE.Mesh(lidGeo, new THREE.MeshLambertMaterial({ color: 0x1b1c22, side: THREE.DoubleSide }));
+  lidMesh.position.set(-0.02, 0, -0.78);
+  lidMesh.rotation.x = 0.72;
+  lid.add(lidMesh);
+  planes.push(lid);
+  // The pianist's bench, just clear of the keys.
+  B.box(PIANO.x + 1.62, 0.30 + STAGE.y, PIANO.z, 0.44, 0.10, 1.36, L.wood);
+  B.box(PIANO.x + 1.62, 0.40 + STAGE.y, PIANO.z, 0.42, 0.07, 1.3, L.paint(0x5f2a2e));
+  for (const bz of [-0.55, 0.55]) B.box(PIANO.x + 1.62, STAGE.y, PIANO.z + bz, 0.09, 0.30, 0.09, L.steel);
+  foot(PIANO.x + 1.62, PIANO.z, 0.55, 1.45);
+
+  // Audience benches: three rows facing the stage, divided into single seats.
+  const benchRow = (x, width, seats) => {
+    const zc = (STAGE.z0 + STAGE.z1) / 2, seatW = width / seats;
+    B.box(x, 0.30, zc, 0.5, 0.10, width, L.wood);
+    B.box(x - 0.01, 0.40, zc, 0.46, 0.07, width - 0.06, L.paint(0x5f2a2e));
+    B.box(x + 0.25, 0.44, zc, 0.07, 0.44, width, L.wood, { rz: -0.12 });
+    for (let i = 0; i <= seats; i++) B.box(x, 0.40, zc - width / 2 + i * seatW, 0.52, 0.24, 0.05, L.wood);
+    for (const lz of [-width / 2 + 0.18, 0, width / 2 - 0.18]) B.box(x, 0, zc + lz, 0.1, 0.30, 0.1, L.steel);
+    foot(x + 0.06, zc, 0.62, width + 0.1);
+  };
+  for (const [x, w, n] of [[-13.0, 6.4, 6], [-10.8, 6.4, 6], [-8.6, 6.4, 6]]) benchRow(x, w, n);
+
+  // The hall's clock, kept from the old backboard: the LED calendar clock now
+  // hangs above the stage, clear of the slat wall and larger than it was, so the
+  // month, the time and the day/month/year rings read from the back rows.
+  const clockZ = (STAGE.z0 + STAGE.z1) / 2, clockY = 4.45;
+  const clockW = 5.4, clockH = clockW * 77 / 165;
+  B.box(-19.9, clockY, clockZ, 0.2, clockH + 0.14, clockW + 0.14, L.steel);
+  B.box(-19.79, clockY + 0.07, clockZ, 0.02, clockH + 0.02, clockW + 0.02, L.paint(0x0a0b0d));
+  surfaces.scoreboard = { position: [-19.77, clockY + 0.07 + clockH / 2, clockZ], rotation: Math.PI / 2, width: clockW, height: clockH };
+
+  // Three soft spots wash the stage and two sconces warm the slat wall.
+  for (const z of [0, 3.5, 7]) bake('hall-stage', -16.6, 6.2, z, 2.6, 8, [0.15, -1, 0]);
+  for (const z of [-0.6, 7.6]) bake('hall-sconce', -19.5, 3.3, z, 1.1, 5, [1, -0.4, 0]);
 
   // A distinct rubber training zone: pull-ups, free weights, cable machine,
   // treadmill and an exercise bike, all static instances in the same batch.
