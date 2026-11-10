@@ -42,10 +42,16 @@ function drawMap(ctx, X, Z, PPM) {
   ctx.fillRect(X(HALL.x0 + 0.3), Z(HALL.z0 + 0.3), (HALL.x1 - HALL.x0 - 0.6) * PPM, (HALL.z1 - HALL.z0 - 0.6) * PPM);
   ctx.fillStyle = '#26190f';
   ctx.fillRect(X(STAGE.x0), Z(STAGE.z0), (STAGE.x1 - STAGE.x0) * PPM, (STAGE.z1 - STAGE.z0) * PPM);
+  // The piano, turned with the hall's yaw and drawn at its scaled footprint:
+  // case first, then the pale keyboard end.
+  const yaw = PIANO.yaw, s = PIANO.scale || 1, along = Math.abs(Math.cos(yaw)), across = Math.abs(Math.sin(yaw));
+  const pw = 2.3 * s * along + 1.56 * s * across, pd = 1.56 * s * along + 2.3 * s * across;
   ctx.fillStyle = '#0d0e11';
-  ctx.fillRect(X(PIANO.x - 1.05), Z(PIANO.z - 0.78), 2.2 * PPM, 1.56 * PPM);
+  ctx.fillRect(X(PIANO.x - pw / 2), Z(PIANO.z - pd / 2), pw * PPM, pd * PPM);
+  const kx = PIANO.x + Math.cos(yaw) * 1.1 * s, kz = PIANO.z - Math.sin(yaw) * 1.1 * s;
+  const kw = 0.3 * s * along + 1.44 * s * across, kd = 1.44 * s * along + 0.3 * s * across;
   ctx.fillStyle = '#c8bda4';
-  ctx.fillRect(X(PIANO.x + 0.95), Z(PIANO.z - 0.7), 0.3 * PPM, 1.4 * PPM);
+  ctx.fillRect(X(kx - kw / 2), Z(kz - kd / 2), kw * PPM, kd * PPM);
 }
 
 // The moving parts the engine does not know about: the Vertec in the gym
@@ -54,11 +60,14 @@ export function setup({ stage, world, player, avatar, sound }) {
   const vertec = createVertec({ avatar, sound });
   stage.scene.add(vertec.mesh);
   const tv = createTv({ stage, world });
+  // The hall's dot-matrix wall keeps its own clock: one uniform per frame.
+  const leds = world.animated?.hallLeds;
   return {
     update(dt) {
       vertec.update(dt, player);
       world.outer.update(dt, stage.camera);
       tv?.update(dt);
+      leds?.update(dt);
     },
   };
 }

@@ -13,8 +13,11 @@ export const HOUSE = { x0: -20, x1: 24, z0: -12, z1: 16, height: 10 };
 export const HALL = { x0: -19, x1: -7, z0: -2.5, z1: 10.5 };
 // The stage deck, low enough to walk onto without a stair.
 export const STAGE = { x0: -19.95, x1: -14.6, z0: -2.2, z1: 9.4, y: 0.14 };
-// The piano sits with its keyboard towards the audience; yaw 0 faces east (+x).
-export const PIANO = { x: -17.2, z: 3.6, yaw: 0 };
+// The piano stands to one side of the stage, as in a recital hall: off the
+// centre line, its keyboard facing south (+z) towards the open floor, and the
+// pianist side-on to the room. The lid is hinged on the bass side, so it opens
+// towards the room whatever the yaw.
+export const PIANO = { x: -17.3, z: 4.8, yaw: -Math.PI / 2, scale: 1.4 };
 // A Vertec at the east edge of the gym, past the treadmill, against the south
 // wall: its pole, and the vanes reaching north (yaw π/2) over open floor, so
 // there is a clear run-up to jump from.
@@ -73,7 +76,7 @@ export const STATIONS = [
   // From the south end of the lounge rug: sofa, TV and fireplace stay in view.
   // Standing between the sofa and the table put the sofa back across the frame.
   { id: 'about', name: '关于我', en: 'About me', at: [1.0, -0.3], look: [1.0, -6] },
-  { id: 'music', name: '音乐厅', en: 'Music hall', at: [-11.9, 3.6], look: [PIANO.x + 1, PIANO.z], page: false },
+  { id: 'music', name: '音乐厅', en: 'Music hall', at: [-12.2, 5.6], look: [PIANO.x, PIANO.z], page: false },
   { id: 'lab', name: '车库', en: 'Garage', at: [13.4, -1.2], look: [15.5, -6.5] },
   { id: 'coffee', name: '咖啡吧', en: 'Coffee bar', at: [8, 13.3], look: [8, 14.8] },
   { id: 'pool', name: '泳池', en: 'Pool', at: [-5, 22.6], look: [-5, 27] },

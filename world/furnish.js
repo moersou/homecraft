@@ -131,81 +131,155 @@ export function furnish({ layer }) {
   B.box(stageX, 0, stageZ, stageW, STAGE.y, stageD, { tex: 'walnut' });
   B.box(STAGE.x1 - 0.045, 0, stageZ, 0.09, STAGE.y, stageD, L.paint(0x1a1512));
   B.box(STAGE.x1 - 0.045, STAGE.y - 0.012, stageZ, 0.11, 0.024, stageD, L.paint(0xb08d4a));
-  // Acoustic slats on the wall behind the stage, over a dark backing.
-  const backZ0 = -1.9, backZ1 = 9.1;
-  B.box(-19.95, 0, (backZ0 + backZ1) / 2, 0.06, 4.3, backZ1 - backZ0, L.paint(0x1e1712));
-  for (let z = backZ0 + 0.2; z < backZ1 - 0.1; z += 0.38) B.box(-19.87, 0, z, 0.11, 4.3, 0.22, { tex: 'oak' });
-  for (const z of [-1.62, 8.82]) B.box(-19.9, 0, z, 0.1, 4.3, 0.1, L.steel);
+  // The hall's back wall is a dot-matrix light field instead of timber slats:
+  // a dark backing, a slim steel frame, and one shader plane. Droplets land at
+  // random spots, spread slowly into rings and fade, like rain on still water.
+  // One draw call and one uniform per frame, with no per-frame canvas work.
+  const backZ0 = -1.9, backZ1 = 9.1, backH = 4.25;
+  const backW = backZ1 - backZ0, backZc = (backZ0 + backZ1) / 2;
+  B.box(-19.97, 0, backZc, 0.06, backH, backW, L.paint(0x0a0806));
+  B.box(-19.93, 0, backZc, 0.1, 0.14, backW + 0.12, L.steel);
+  B.box(-19.93, backH - 0.08, backZc, 0.1, 0.08, backW + 0.12, L.steel);
+  for (const z of [backZ0, backZ1]) B.box(-19.93, 0, z, 0.1, backH, 0.1, L.steel);
+  const ledW = backW - 0.3, ledH = backH - 0.24, ledY0 = 0.1;
+  const ledTime = { value: 0 };
+  const ledMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+  ledMat.customProgramCacheKey = () => 'hall-led-wall';
+  ledMat.onBeforeCompile = shader => {
+    shader.uniforms.uTime = ledTime;
+    shader.uniforms.uGrid = { value: new THREE.Vector2(ledW / 0.075, ledH / 0.075) };
+    shader.uniforms.uSizeM = { value: new THREE.Vector2(ledW, ledH) };
+    shader.uniforms.uLit = { value: new THREE.Color(0xffb347) };
+    shader.uniforms.uDim = { value: new THREE.Color(0x2a1c10) };
+    shader.vertexShader = 'varying vec2 vLedUv;\n' + shader.vertexShader
+      .replace('#include <begin_vertex>', '#include <begin_vertex>\n\tvLedUv = uv;');
+    shader.fragmentShader = [
+      'varying vec2 vLedUv;',
+      'uniform float uTime;',
+      'uniform vec2 uGrid;',
+      'uniform vec2 uSizeM;',
+      'uniform vec3 uLit;',
+      'uniform vec3 uDim;',
+      '',
+      '// Hash a slice of time into a pseudo-random 0..1 number.',
+      'float ledHash(float n) { return fract(sin(n * 91.7) * 43758.5453); }',
+      '',
+    ].join('\n') + shader.fragmentShader.replace('#include <color_fragment>', [
+      '#include <color_fragment>',
+      '{',
+      '  // One LED per cell, round and slightly apart, like the clock field.',
+      '  vec2 grid = vLedUv * uGrid;',
+      '  float dotMask = 1.0 - smoothstep(0.28, 0.46, length(fract(grid) - 0.5));',
+      '  vec2 m = vLedUv * uSizeM;',
+      '  float T = uTime;',
+      '  // Three droplets are in flight, each on its own incommensurate period. A',
+      '  // droplet is hashed from its time slice, so it always lands somewhere new,',
+      '  // spreads slowly, and fades out with the square of its age.',
+      '  float rings = 0.0;',
+      '  for (int i = 0; i < 3; i++) {',
+      '    float period = i == 0 ? 6.4 : i == 1 ? 9.1 : 12.3;',
+      '    float shift = float(i) * 1.9;',
+      '    float slot = floor((T + shift) / period);',
+      '    float seed = ledHash(slot + float(i) * 13.1);',
+      '    float seed2 = ledHash(seed * 37.17 + float(i));',
+      '    vec2 origin = uSizeM * vec2(0.06 + 0.88 * ledHash(seed * 7.13), 0.12 + 0.78 * seed2);',
+      '    float age = (T + shift) - slot * period;',
+      '    float life = 1.0 - age / period;',
+      '    float radius = age * (0.95 + 0.5 * seed2);',
+      '    float d = length(m - origin);',
+      '    float ring = 1.0 - smoothstep(0.0, 0.34, abs(d - radius));',
+      '    float wake = (1.0 - smoothstep(0.0, 0.2, abs(d - radius * 0.62))) * 0.22;',
+      '    rings += (ring + wake) * life * life;',
+      '  }',
+      '  float glow = rings + 0.03;',
+      '  float twinkle = 0.86 + 0.28 * fract(sin(dot(floor(grid), vec2(12.9898, 78.233))) * 43758.5453);',
+      '  glow = clamp(glow * twinkle, 0.0, 1.0);',
+      '  diffuseColor.rgb = mix(uDim * 0.75, uLit, glow) * dotMask;',
+      '}',
+    ].join('\n'));
+  };
+  const ledWall = new THREE.Mesh(new THREE.PlaneGeometry(ledW, ledH), ledMat);
+  ledWall.position.set(-19.87, ledY0 + ledH / 2, backZc);
+  ledWall.rotation.y = Math.PI / 2;
+  planes.push(ledWall);
+  animated.hallLeds = { update: dt => { ledTime.value = (ledTime.value + dt) % 3600; } };
 
   // The grand piano: satin black case with a stepped wing, an open lid, three
-  // legs on casters, pedals and ivory keys. Purely static and batched, except
-  // the lid, which is one plane on a hinge of its own.
+  // legs on casters, pedals and ivory keys. It is drawn at true dimensions and
+  // then scaled as a whole, the way the ball and the players' heads are scaled
+  // with the blocky bodies: a concert grand that stands up beside a 1.8 m avatar.
+  // Static and batched, except the lid, which is one plane on a hinge.
   const ebony = L.paint(0x141519), ebonyEdge = L.paint(0x2d3037), brass = L.paint(0xb08d4a);
   const ivory = L.paint(0xf1ead9), keyBlack = L.paint(0x101114);
+  const K = PIANO.scale;
   const piano = (x, z, yaw) => B.at(x, STAGE.y, z, yaw, () => {
-    // The wing, tail first: five steps along the straight bass side.
+    // Every part is written in metres and multiplied here, so proportions hold.
+    const box = (cx, y, cz, w, h, d, look, opts) => B.box(cx * K, y * K, cz * K, w * K, h * K, d * K, look, opts);
+    // The wing, tail first: five steps along the straight bass side, which is
+    // the pianist's left. The long edge sits at +z, so the lid hinges on the
+    // bass side and opens over the room whatever the yaw is.
     for (const [x0, x1, z0, z1] of [
-      [-1.05, -0.70, -0.78, -0.18],
-      [-0.70, -0.30, -0.78, 0.06],
-      [-0.30, 0.10, -0.78, 0.34],
-      [0.10, 0.55, -0.78, 0.60],
+      [-1.05, -0.70, 0.18, 0.78],
+      [-0.70, -0.30, -0.06, 0.78],
+      [-0.30, 0.10, -0.34, 0.78],
+      [0.10, 0.55, -0.60, 0.78],
       [0.55, 0.95, -0.78, 0.78],
-    ]) B.box((x0 + x1) / 2, 0.60, (z0 + z1) / 2, x1 - x0, 0.33, z1 - z0, ebony);
+    ]) box((x0 + x1) / 2, 0.60, (z0 + z1) / 2, x1 - x0, 0.33, z1 - z0, ebony);
     // Keyboard end: key bed, ivory keys and the black keys in their mixed groups.
-    B.box(1.10, 0.60, 0, 0.30, 0.13, 1.56, ebony);
-    B.box(1.07, 0.73, 0, 0.24, 0.022, 1.44, ivory);
+    box(1.10, 0.60, 0, 0.30, 0.13, 1.56, ebony);
+    box(1.07, 0.73, 0, 0.24, 0.022, 1.44, ivory);
     const keyW = 1.44 / 14;
     for (let octave = 0; octave < 2; octave++) for (const i of [0, 1, 3, 4, 5]) {
       const kz = -0.72 + (octave * 7 + i + 1) * keyW;
-      B.box(1.0, 0.752, kz, 0.12, 0.02, keyW * 0.58, keyBlack);
+      box(1.0, 0.752, kz, 0.12, 0.02, keyW * 0.58, keyBlack);
     }
-    B.box(1.14, 0.60, 0, 0.12, 0.05, 1.44, ebonyEdge);
+    box(1.14, 0.60, 0, 0.12, 0.05, 1.44, ebonyEdge);
     // Music desk with a white sheet on it, leaning back towards the strings.
-    B.box(0.60, 0.93, 0, 0.05, 0.34, 1.0, ebony, { rz: 0.2 });
-    B.box(0.575, 0.99, 0, 0.02, 0.24, 0.62, L.paint(0xefe9dc), { rz: 0.2 });
+    box(0.60, 0.93, 0, 0.05, 0.34, 1.0, ebony, { rz: 0.2 });
+    box(0.575, 0.99, 0, 0.02, 0.24, 0.62, L.paint(0xefe9dc), { rz: 0.2 });
     // Three legs with brass casters, and the pedals under the keys.
-    for (const [lx, lz] of [[0.82, -0.58], [0.82, 0.58], [-0.76, -0.54]]) {
-      B.box(lx, 0, lz, 0.13, 0.60, 0.13, ebony);
-      B.box(lx, 0, lz, 0.085, 0.06, 0.085, brass);
+    for (const [lx, lz] of [[0.82, -0.58], [0.82, 0.58], [-0.76, 0.54]]) {
+      box(lx, 0, lz, 0.13, 0.60, 0.13, ebony);
+      box(lx, 0, lz, 0.085, 0.06, 0.085, brass);
     }
-    for (const pz of [-0.14, 0, 0.14]) B.box(1.16, 0.05, pz, 0.18, 0.028, 0.055, brass);
+    for (const pz of [-0.14, 0, 0.14]) box(1.16, 0.05, pz, 0.18, 0.028, 0.055, brass);
     // The prop stick reaches the open lid just above the strings.
-    B.box(0.55, 0.94, -0.075, 0.045, 0.90, 0.045, ebony, { rx: 0.167 });
+    box(0.55, 0.94, 0.075, 0.045, 0.90, 0.045, ebony, { rx: -0.167 });
   });
   piano(PIANO.x, PIANO.z, PIANO.yaw);
-  foot(PIANO.x, PIANO.z, 2.5, 1.8);
-  // The lid, hinged along the straight bass side and propped open over the case.
+  // Footprints turn with the instrument, so a side-on piano blocks the right cells.
+  const swing = (w, d) => [
+    w * Math.abs(Math.cos(PIANO.yaw)) + d * Math.abs(Math.sin(PIANO.yaw)),
+    d * Math.abs(Math.cos(PIANO.yaw)) + w * Math.abs(Math.sin(PIANO.yaw)),
+  ];
+  foot(PIANO.x, PIANO.z, ...swing(2.5 * K, 1.8 * K));
+  // The lid, hinged along the straight bass side (+z) and propped open over the
+  // case, so it always rises away from the wall and towards the room.
   const lid = new THREE.Group();
-  lid.position.set(PIANO.x, STAGE.y + 0.94, PIANO.z);
+  lid.position.set(PIANO.x, STAGE.y + 0.94 * K, PIANO.z);
   lid.rotation.y = PIANO.yaw;
-  const lidGeo = new THREE.PlaneGeometry(1.94, 1.36);
-  lidGeo.translate(0, 0.68, 0);
+  const lidGeo = new THREE.PlaneGeometry(1.94 * K, 1.36 * K);
+  lidGeo.translate(0, 0.68 * K, 0);
   const lidMesh = new THREE.Mesh(lidGeo, new THREE.MeshLambertMaterial({ color: 0x1b1c22, side: THREE.DoubleSide }));
-  lidMesh.position.set(-0.02, 0, -0.78);
-  lidMesh.rotation.x = 0.72;
+  lidMesh.position.set(-0.02 * K, 0, 0.78 * K);
+  lidMesh.rotation.x = -0.72;
   lid.add(lidMesh);
   planes.push(lid);
-  // The pianist's bench, just clear of the keys.
-  B.box(PIANO.x + 1.62, 0.30 + STAGE.y, PIANO.z, 0.44, 0.10, 1.36, L.wood);
-  B.box(PIANO.x + 1.62, 0.40 + STAGE.y, PIANO.z, 0.42, 0.07, 1.3, L.paint(0x5f2a2e));
-  for (const bz of [-0.55, 0.55]) B.box(PIANO.x + 1.62, STAGE.y, PIANO.z + bz, 0.09, 0.30, 0.09, L.steel);
-  foot(PIANO.x + 1.62, PIANO.z, 0.55, 1.45);
+  // The pianist's bench, just clear of the keys and turned with the piano.
+  const seatX = PIANO.x + Math.cos(PIANO.yaw) * 1.62 * K, seatZ = PIANO.z - Math.sin(PIANO.yaw) * 1.62 * K;
+  B.at(seatX, STAGE.y, seatZ, PIANO.yaw, () => {
+    B.box(0, 0.48, 0, 0.44, 0.10, 1.36, L.wood);
+    B.box(0, 0.58, 0, 0.42, 0.07, 1.3, L.paint(0x5f2a2e));
+    for (const bz of [-0.55, 0.55]) B.box(0, 0, bz, 0.09, 0.48, 0.09, L.steel);
+  });
+  foot(seatX, seatZ, ...swing(0.55, 1.45));
 
-  // Audience benches: three rows facing the stage, divided into single seats.
-  const benchRow = (x, width, seats) => {
-    const zc = (STAGE.z0 + STAGE.z1) / 2, seatW = width / seats;
-    B.box(x, 0.30, zc, 0.5, 0.10, width, L.wood);
-    B.box(x - 0.01, 0.40, zc, 0.46, 0.07, width - 0.06, L.paint(0x5f2a2e));
-    B.box(x + 0.25, 0.44, zc, 0.07, 0.44, width, L.wood, { rz: -0.12 });
-    for (let i = 0; i <= seats; i++) B.box(x, 0.40, zc - width / 2 + i * seatW, 0.52, 0.24, 0.05, L.wood);
-    for (const lz of [-width / 2 + 0.18, 0, width / 2 - 0.18]) B.box(x, 0, zc + lz, 0.1, 0.30, 0.1, L.steel);
-    foot(x + 0.06, zc, 0.62, width + 0.1);
-  };
-  for (const [x, w, n] of [[-13.0, 6.4, 6], [-10.8, 6.4, 6], [-8.6, 6.4, 6]]) benchRow(x, w, n);
+  // The floor in front of the stage is left open: the hall is a place to walk
+  // through, not a seated auditorium.
 
   // The hall's clock, kept from the old backboard: the LED calendar clock now
   // hangs above the stage, clear of the slat wall and larger than it was, so the
-  // month, the time and the day/month/year rings read from the back rows.
+  // month, the time and the day/month/year rings read across the open floor.
   const clockZ = (STAGE.z0 + STAGE.z1) / 2, clockY = 4.45;
   const clockW = 5.4, clockH = clockW * 77 / 165;
   B.box(-19.9, clockY, clockZ, 0.2, clockH + 0.14, clockW + 0.14, L.steel);
