@@ -4,14 +4,17 @@
 // splashes, drips and bubbles. Rain follows the weather: a soft wash and the
 // patter of separate drops outdoors, dull under the glass roof, a deep hush
 // under the pool's surface with now and then a drop above.
-// No footsteps: made-up ones read as noise. Off until switched on; remembered.
+// No footsteps: made-up ones read as noise. On for a first-time visitor; only
+// an explicit press of the corner switch turns it off, and that is remembered.
 
 const KEY = 'terryhome-sound';
 
 export function createSound() {
   let ctx = null, bus = null, tone = null, clear = null, room = null, white = null, rumble = null;
-  let on = false;
-  try { on = localStorage.getItem(KEY) === 'on'; } catch {}
+  // Nothing stored yet means the first visit: sound is on. A visitor who turned
+  // it off has 'off' stored, and stays off.
+  let on = true;
+  try { on = localStorage.getItem(KEY) !== 'off'; } catch {}
 
   function ensure() {
     if (ctx) return ctx;
