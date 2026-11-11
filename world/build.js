@@ -62,12 +62,15 @@ export function setup({ stage, world, player, avatar, sound }) {
   const tv = createTv({ stage, world });
   // The hall's dot-matrix wall keeps its own clock: one uniform per frame.
   const leds = world.animated?.hallLeds;
+  const poolGlow = world.animated?.poolGlow;
   return {
     update(dt) {
       vertec.update(dt, player);
       world.outer.update(dt, stage.camera);
       tv?.update(dt);
       leds?.update(dt);
+      // stage.night eases with the mood, so the light on the water follows dusk.
+      poolGlow?.update(dt, stage.night);
     },
   };
 }

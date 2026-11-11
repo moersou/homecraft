@@ -7,7 +7,7 @@ import * as P from './paint.js';
 import { createCar } from './car.js';
 import { buildFloorPlants } from './plants.js';
 import { hangPhotos, PHOTOS } from './gallery.js';
-import { HOUSE, HALL, STAGE, PIANO, VERTEC, LOFT, STAIRS, SECRET, GARAGE, POOL, POOL_LAMPS, ENTRANCE, BACKDOOR, ROOF_GLASS, TERRACE, DRIVEWAY } from './layout.js';
+import { HOUSE, HALL, STAGE, PIANO, STUDY, VERTEC, LOFT, STAIRS, GARAGE, POOL, POOL_LAMPS, ENTRANCE, BACKDOOR, ROOF_GLASS, TERRACE, DRIVEWAY } from './layout.js';
 
 const L = {
   // Two interior wood finishes: the existing floor and the wall-panel timber.
@@ -273,6 +273,10 @@ export function furnish({ layer }) {
     for (const bz of [-0.55, 0.55]) B.box(0, 0, bz, 0.09, 0.48, 0.09, L.steel);
   });
   foot(seatX, seatZ, ...swing(0.55, 1.45));
+  // A wool rug under the instrument marks the recital corner on the stage.
+  const rugW = 4.4, rugD = 5.6;
+  const rug = plane(rugW, rugD, paint(rugW * 24, rugD * 24, P.paintRug), -17.1, STAGE.y + 0.006, 4.9, 0, false, -Math.PI / 2);
+  rug.name = 'hall-rug';
 
   // The floor in front of the stage is left open: the hall is a place to walk
   // through, not a seated auditorium.
@@ -285,6 +289,69 @@ export function furnish({ layer }) {
   B.box(-19.9, clockY, clockZ, 0.2, clockH + 0.14, clockW + 0.14, L.steel);
   B.box(-19.79, clockY + 0.07, clockZ, 0.02, clockH + 0.02, clockW + 0.02, L.paint(0x0a0b0d));
   surfaces.scoreboard = { position: [-19.77, clockY + 0.07 + clockH / 2, clockZ], rotation: Math.PI / 2, width: clockW, height: clockH };
+
+  // A gallery group on the wall under the bedroom, north of the light screen:
+  // three posters sharing one baseline and one continuous light, centred in the
+  // span east of the library door, with a low console grounding them.
+  const posterZ = -3.94, posterY = 1.15, posterW = 1.15, posterH = 1.72;
+  [P.paintYiYiPoster, P.paintRecitalPoster, P.paintNightSeaPoster].forEach((art, i) => {
+    const x = -14.9 + (i - 1) * 1.32;
+    B.box(x, posterY - 0.06, posterZ - 0.03, posterW + 0.12, posterH + 0.12, 0.06, L.paint(0x141414));
+    plane(posterW, posterH, paint(460, 688, art), x, posterY + posterH / 2, posterZ, 0);
+  });
+  // One light bar for the group, and one bake for it, instead of three fittings.
+  B.box(-14.9, posterY + posterH + 0.2, posterZ + 0.12, 3.86, 0.05, 0.14, L.steel);
+  B.box(-14.9, posterY + posterH + 0.182, posterZ + 0.15, 3.7, 0.016, 0.09, L.light(0xffe6c0));
+  bake('poster-light', -14.9, posterY + posterH + 0.1, posterZ + 0.45, 1.1, 4.6, [0, -1, -0.3]);
+  // A low console under the group, so the wall has a base and not just frames.
+  B.box(-14.9, 0.72, posterZ + 0.2, 3.3, 0.08, 0.36, L.wood);
+  B.box(-14.9, 0.8, posterZ + 0.2, 3.38, 0.03, 0.4, L.marble);
+  for (const x of [-16.3, -13.5]) B.box(x, 0, posterZ + 0.2, 0.06, 0.72, 0.32, L.steel);
+  foot(-14.9, posterZ + 0.2, 3.42, 0.44);
+  B.box(-16.1, 0.83, posterZ + 0.2, 0.3, 0.05, 0.22, L.paint(0x7a2f2a));
+  B.box(-16.04, 0.88, posterZ + 0.24, 0.26, 0.045, 0.2, L.paint(0x2f4a44));
+  B.box(-13.95, 0.83, posterZ + 0.2, 0.18, 0.22, 0.18, L.paint(0xb08d4a));
+
+  // The library west of the loft: bookcases along its north wall, a reading
+  // table under two ceiling lamps, a window seat in the west window and a rug.
+  // A doorway lined in wood opens onto the hall beside the posters.
+  const libX = (STUDY.x0 + STUDY.x1) / 2, libZ = (STUDY.z0 + STUDY.z1) / 2;
+  const bookZ = STUDY.z0 + 0.19;
+  for (let x = STUDY.x0 + 0.56; x <= STUDY.x1 - 0.75; x += 1.02) B.box(x, 0, bookZ, 0.96, 2.62, 0.36, L.books);
+  foot(libX, bookZ, STUDY.x1 - STUDY.x0 - 0.5, 0.45);
+  // A window seat under the west window, with a linen cushion.
+  B.box(STUDY.x0 + 0.31, 0, -8, 0.6, 0.44, 2.6, L.wood);
+  B.box(STUDY.x0 + 0.31, 0.44, -8, 0.56, 0.1, 2.5, L.linen);
+  foot(STUDY.x0 + 0.31, -8, 0.68, 2.7);
+  // The reading table, its two chairs and the rug under them.
+  table(libX, libZ, 3.0, 1.1);
+  const chair = (x, z, ry) => {
+    B.at(x, 0, z, ry, () => {
+      B.box(0, 0.42, 0, 0.46, 0.06, 0.46, L.wood);
+      B.box(0, 0.48, -0.2, 0.46, 0.46, 0.06, L.wood);
+      for (const [dx, dz] of [[-0.18, -0.18], [0.18, -0.18], [-0.18, 0.18], [0.18, 0.18]]) B.box(dx, 0, dz, 0.05, 0.42, 0.05, L.steel);
+    });
+    foot(x, z, 0.55, 0.55);
+  };
+  chair(libX, libZ - 1.15, 0); chair(libX, libZ + 1.15, Math.PI);
+  plane(4.0, 3.4, paint(96, 82, P.paintRug), libX, 0.012, libZ, 0, false, -Math.PI / 2);
+  // Two books left on the table.
+  B.box(libX - 0.8, 0.86, libZ, 0.34, 0.05, 0.24, L.paint(0x7a2f2a));
+  B.box(libX - 0.74, 0.91, libZ + 0.04, 0.3, 0.045, 0.22, L.paint(0x2f4a44));
+  // Ceiling lamps and a floor lamp by the window, since no other light reaches.
+  const ceilingLamp = (x, z) => {
+    B.box(x, 3.7, z, 0.05, 0.3, 0.05, L.steel);
+    B.box(x, 3.58, z, 0.36, 0.1, 0.36, L.light(0xffe3b6));
+    bake('library-ceiling', x, 3.46, z, 1.4, 5.6, [0, -1, 0]);
+  };
+  ceilingLamp(libX - 1.3, libZ); ceilingLamp(libX + 1.3, libZ);
+  B.box(STUDY.x0 + 0.6, 0, STUDY.z1 - 0.9, 0.05, 1.6, 0.05, L.steel);
+  B.box(STUDY.x0 + 0.6, 1.6, STUDY.z1 - 0.9, 0.36, 0.24, 0.36, L.light(0xffdfa8));
+  foot(STUDY.x0 + 0.6, STUDY.z1 - 0.9, 0.3, 0.3);
+  bake('library-floor', STUDY.x0 + 0.6, 1.45, STUDY.z1 - 0.9, 0.9, 3.8, [0, -1, 0]);
+  // The doorway, lined in wood, rising to the poster group's light bar.
+  for (const x of [STUDY.door.x0, STUDY.door.x1]) B.box(x, 0, STUDY.z1 + 0.5, 0.12, 3.06, 1.04, L.wood);
+  B.box((STUDY.door.x0 + STUDY.door.x1) / 2, 3.0, STUDY.z1 + 0.5, STUDY.door.x1 - STUDY.door.x0, 0.1, 1.04, L.wood);
 
   // Three soft spots wash the stage and two sconces warm the slat wall.
   for (const z of [0, 3.5, 7]) bake('hall-stage', -16.6, 6.2, z, 2.6, 8, [0.15, -1, 0]);
@@ -374,13 +441,6 @@ export function furnish({ layer }) {
       B.box(x, y, z, 0.06, 0.95, 0.06, L.steel);
     }
   }
-  B.box(SECRET.x1 + 1.06, LOFT.y + 1.35, SECRET.door + 0.5, 0.14, 0.32, 0.09, L.paint(0xb3261e));
-  hot('secret', SECRET.x1 + 1.07, LOFT.y + 1.2, SECRET.door + 0.5, 0.3, 0.6, 0.4);
-  B.box(SECRET.x0 + 0.5, LOFT.y, SECRET.z0 + 1, 0.98, 0.3, 1.96, L.wood);
-  B.box(SECRET.x0 + 0.5, LOFT.y + 0.3, SECRET.z0 + 1.25, 0.98, 0.26, 1.48, L.paint(0xa83232));
-  B.box(SECRET.x0 + 0.5, LOFT.y + 0.3, SECRET.z0 + 0.26, 0.98, 0.3, 0.5, L.linen);
-  foot(SECRET.x0 + 0.5, SECRET.z0 + 1, 1, 2, 1);
-  hot('heart', SECRET.x0 + 0.5, LOFT.y, SECRET.z0 + 1, 1, 0.8, 2);
 
   // Two independent sit/stand desks form an L, as in the owner's workspace.
   // One ultrawide + laptop, one pair of monitors + tower, each with its own chair.
@@ -622,25 +682,25 @@ export function furnish({ layer }) {
 
   // Full-floor master suite: sleeping zone, dressing wall and a small bench.
   // The glass front and a wood door folded against it preserve a broad entry.
-  B.box(-13, LOFT.y + .35, -4.14, 14, 2.65, .055, { tex: 'glass', glass: true });
-  glazing(B, -13, -4.14, 14, LOFT.y, 3);
+  B.box(-9.6, LOFT.y + .35, -4.14, 6.8, 2.65, .055, { tex: 'glass', glass: true });
+  glazing(B, -9.6, -4.14, 6.8, LOFT.y, 3);
   for (const x of [-6, -3]) B.box(x, LOFT.y, -4.1, .07, 2.9, .1, L.steel);
   B.box(-4.5, LOFT.y + 2.83, -4.1, 3, .07, .1, L.steel);
   openDoor(B, -6, LOFT.y, -4.02, 2.75, Math.PI);
   foot(-7.38, -4.03, 2.85, .15, 1);
-  const bedX = -12, bedZ = -9.65, bedY = LOFT.y;
-  B.box(bedX, bedY, -8.45, 7.4, .025, 6.4, L.linen);
-  B.box(bedX, bedY, -11.86, 6.8, 2.3, .1, L.panel);
-  B.box(bedX, bedY + .3, -11.79, 4.9, 1.5, .07, L.marble);
-  B.box(bedX, bedY + 2.27, -11.77, 6.5, .025, .035, L.light(0xffe2ae));
-  for (const x of [bedX - 2, bedX + 2]) bake('headboard-cove', x, bedY + 2.3, -11.5, 1.05, 5.5, [0, -.7, 1]);
+  const bedX = -10.6, bedZ = -9.65, bedY = LOFT.y;
+  B.box(bedX, bedY, -8.45, 4.8, .025, 6.4, L.linen);
+  B.box(bedX, bedY, -11.86, 4.2, 2.3, .1, L.panel);
+  B.box(bedX, bedY + .3, -11.79, 3.6, 1.5, .07, L.marble);
+  B.box(bedX, bedY + 2.27, -11.77, 4.0, .025, .035, L.light(0xffe2ae));
+  for (const x of [bedX - 1.4, bedX + 1.4]) bake('headboard-cove', x, bedY + 2.3, -11.5, 1.05, 5.5, [0, -.7, 1]);
   B.box(bedX, bedY, bedZ, 3.25, .28, 3.15, L.panel);
   B.box(bedX, bedY + .28, bedZ, 3.1, .28, 3, L.linen);
   B.box(bedX, bedY, bedZ - 1.52, 3.4, 1.02, .15, L.paint(0x4a514b));
   B.box(bedX, bedY + .56, bedZ + .38, 3.1, .1, 2.05, L.paint(0xbab2a5));
   for (const x of [bedX - .76, bedX + .76]) B.box(x, bedY + .56, bedZ - .9, 1.05, .17, .58, L.linen);
   foot(bedX, bedZ, 3.45, 3.3, 1);
-  for (const x of [bedX - 2.4, bedX + 2.4]) {
+  for (const x of [bedX - 1.9, bedX + 1.9]) {
     B.box(x, bedY, bedZ - .64, .85, .64, .8, L.panel);
     B.box(x, bedY + .64, bedZ - .64, .9, .055, .85, L.marble); foot(x, bedZ - .64, .95, .9, 1);
     B.box(x, bedY + .7, bedZ - .64, .11, .38, .11, L.steel);
@@ -660,8 +720,10 @@ export function furnish({ layer }) {
   B.box(bedX, LOFT.y + .08, benchZ, 3.1, .41, .72, L.paint(0x1f2224));
   for (const x of [bedX - 1.3, bedX + 1.3]) B.box(x, LOFT.y, benchZ, .08, .08, .52, L.steel);
   foot(bedX, benchZ, 3.2, .82, 1);
-  B.box(-19.35, LOFT.y, -7.1, .8, .84, 2.5, L.panel);
-  B.box(-19.35, LOFT.y + .84, -7.1, .88, .07, 2.6, L.marble); foot(-19.35, -7.1, .95, 2.7, 1);
+  // The bedroom's whole west wall is one mural: layered ridges fading into dawn
+  // mist, edge to edge and floor to ceiling, with no frame at all.
+  const muralW = 7.96, muralH = 5.86;
+  plane(muralW, muralH, paint(1024, 752, P.paintMountainMural), -12.985, LOFT.y + 0.05 + muralH / 2, -8, Math.PI / 2);
   hot('writing', bedX, LOFT.y, bedZ, 3.6, 1.15, 3.5);
 
   // A quiet terrace and still pool outside. No games corner, string lights,
@@ -688,6 +750,45 @@ export function furnish({ layer }) {
   }
   for (const x of [-19, -7, 7, 19]) bollard(x, TERRACE.z1 + .6);
   for (const z of [-9, -6.2, -3.4]) bollard(DRIVEWAY.x1 - .6, z);
+  // String lights over the terrace seating: three slim posts, one sagging strand
+  // between each pair, and warm bulbs hanging from it. Two bakes light the deck
+  // under them, so the terrace still reads as a place to sit after dark.
+  const strandZ = TERRACE.z1 - 0.5, strandY = 3.15, posts = [-19, -11.5, -4];
+  for (const x of posts) { B.box(x, 0, strandZ, 0.09, strandY + 0.2, 0.09, L.steel); foot(x, strandZ, 0.2, 0.2); }
+  for (let i = 0; i < posts.length - 1; i++) {
+    const x0 = posts[i], x1 = posts[i + 1], segs = 10;
+    const sag = t => strandY - Math.sin(t * Math.PI) * 0.62;
+    for (let s = 0; s < segs; s++) {
+      const t0 = s / segs, t1 = (s + 1) / segs;
+      const ax = x0 + (x1 - x0) * t0, bx = x0 + (x1 - x0) * t1;
+      const ay = sag(t0), by = sag(t1), mx = (ax + bx) / 2, my = (ay + by) / 2;
+      const angle = Math.atan2(by - ay, bx - ax);
+      B.box(mx, my, strandZ, Math.hypot(bx - ax, by - ay), 0.018, 0.018, L.paint(0x2b2a27), { rz: angle });
+      B.box(mx, my - 0.13, strandZ, 0.02, 0.07, 0.02, L.steel);
+      B.box(mx, my - 0.2, strandZ, 0.075, 0.09, 0.075, L.light(0xffd39a));
+    }
+    bake('terrace-string', (x0 + x1) / 2, strandY - 0.4, strandZ, 1.5, 7, [0, -1, 0]);
+  }
+  // A second strand along the seaward roof parapet: four posts on the parapet,
+  // three sagging runs of warm bulbs, so the house wears a line of light above
+  // the terrace after dark and the roof promenade stays walkable.
+  const roofZ = HOUSE.z1 + 0.5, parapetTop = HOUSE.height + 2;
+  const roofPosts = [-18, -6, 6, 18];
+  for (const x of roofPosts) B.box(x, parapetTop, roofZ, 0.08, 1.15, 0.08, L.steel);
+  for (let i = 0; i < roofPosts.length - 1; i++) {
+    const x0 = roofPosts[i], x1 = roofPosts[i + 1], segs = 12;
+    const sag = t => parapetTop + 1.1 - Math.sin(t * Math.PI) * 0.5;
+    for (let s = 0; s < segs; s++) {
+      const t0 = s / segs, t1 = (s + 1) / segs;
+      const ax = x0 + (x1 - x0) * t0, bx = x0 + (x1 - x0) * t1;
+      const ay = sag(t0), by = sag(t1), mx = (ax + bx) / 2, my = (ay + by) / 2;
+      const angle = Math.atan2(by - ay, bx - ax);
+      B.box(mx, my, roofZ, Math.hypot(bx - ax, by - ay), 0.016, 0.016, L.paint(0x2b2a27), { rz: angle });
+      B.box(mx, my - 0.12, roofZ, 0.018, 0.06, 0.018, L.steel);
+      B.box(mx, my - 0.19, roofZ, 0.07, 0.085, 0.07, L.light(0xffd39a));
+    }
+    bake('roof-string', (x0 + x1) / 2, parapetTop + 0.55, roofZ - 0.7, 1.25, 6, [0, -1, -0.2]);
+  }
   // A static, flush sea-facing crest replaces the raised one-metre coping.
   // Its top meets the water; the submerged island edge leaves no land in front.
   B.box((POOL.x0 + POOL.x1) / 2, POOL.bed, POOL.z1 + .06, POOL.x1 - POOL.x0, POOL.water - POOL.bed, .12,
@@ -695,6 +796,30 @@ export function furnish({ layer }) {
   // Three lamps low in the house-side wall, facing the sea, light the water at
   // night. Their glow in the water is worked out in the block and water shaders.
   for (const x of POOL_LAMPS.xs) B.box(x, POOL_LAMPS.y - .11, POOL.z0 + .015, .36, .22, .03, L.light(0xdffcff));
+  // The lamps' own glow in the water is worked out in the block and water
+  // shaders; on top of it a soft disc rocks on the surface after dark, breathing
+  // and drifting a little, so the light on the water never sits still.
+  const glowTex = paint(64, 64, P.paintGlow);
+  const glowMat = new THREE.MeshBasicMaterial({ map: glowTex, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: 0 });
+  const waterGlows = POOL_LAMPS.xs.map(x => {
+    const disc = new THREE.Mesh(new THREE.PlaneGeometry(2.8, 1.9), glowMat);
+    disc.rotation.x = -Math.PI / 2;
+    disc.position.set(x, POOL.water + 0.015, POOL.z0 + 1.35);
+    disc.renderOrder = 3;
+    planes.push(disc);
+    return disc;
+  });
+  let waterClock = 0;
+  animated.poolGlow = {
+    update(dt, night = 0) {
+      waterClock += dt;
+      glowMat.opacity = night * (0.30 + 0.09 * Math.sin(waterClock * 0.7));
+      waterGlows.forEach((disc, i) => {
+        const s = 1 + 0.07 * Math.sin(waterClock * 0.9 + i * 2.1);
+        disc.scale.set(s, s, 1);
+      });
+    },
+  };
   // Pool access ladder: polished rails curve over the coping, with four rungs
   // visibly descending into the water. Swimming up to it climbs out here.
   const silver = L.paint(0xb3c1c3), ladderZ = POOL.z0;

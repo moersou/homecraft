@@ -320,6 +320,172 @@ function shadeHex(hex, amount) {
   return '#' + ((c(n >> 16) << 16) | (c((n >> 8) & 255) << 8) | c(n & 255)).toString(16).padStart(6, '0');
 }
 
+// A film poster: its two quiet title strokes under a warm evening street, a boy
+// walking away down the road, and the director's name at the foot.
+export function paintYiYiPoster(ctx, w, h) {
+  const sky = ctx.createLinearGradient(0, 0, 0, h);
+  sky.addColorStop(0, '#f7c96f'); sky.addColorStop(0.45, '#e0964a');
+  sky.addColorStop(0.78, '#8e4c2a'); sky.addColorStop(1, '#4a2718');
+  ctx.fillStyle = sky; ctx.fillRect(0, 0, w, h);
+  const r = rng(2000);
+  // Distant blocks along the horizon.
+  ctx.fillStyle = 'rgba(74,39,24,.5)';
+  for (let x = 0; x < w; x += Math.round(w * 0.055)) {
+    const bh = Math.round(h * (0.10 + r() * 0.15));
+    ctx.fillRect(x, Math.round(h * 0.55) - bh, Math.round(w * 0.045), bh + Math.round(h * 0.02));
+  }
+  // The road, narrowing to the horizon, with its two lines converging.
+  ctx.fillStyle = 'rgba(58,30,18,.78)';
+  ctx.beginPath();
+  ctx.moveTo(0, h); ctx.lineTo(Math.round(w * 0.34), Math.round(h * 0.55));
+  ctx.lineTo(Math.round(w * 0.66), Math.round(h * 0.55)); ctx.lineTo(w, h);
+  ctx.closePath(); ctx.fill();
+  ctx.strokeStyle = 'rgba(255,240,214,.5)'; ctx.lineWidth = Math.max(1, w * 0.005);
+  for (const s of [-1, 1]) {
+    ctx.beginPath();
+    ctx.moveTo(w / 2 + s * w * 0.02, h * 0.56);
+    ctx.lineTo(w / 2 + s * w * 0.33, h);
+    ctx.stroke();
+  }
+  // The boy, walking away, small against the evening.
+  const bx = Math.round(w * 0.55), feet = Math.round(h * 0.80), s = Math.max(3, Math.round(w * 0.032));
+  ctx.fillStyle = '#25150f';
+  ctx.fillRect(bx - s, feet - s * 5, s * 2, s * 2);
+  ctx.fillRect(bx - s, feet - s * 3, s * 2, s * 3);
+  ctx.fillRect(bx - s, feet, Math.max(1, Math.round(s * 0.8)), s * 2);
+  ctx.fillRect(bx + Math.round(s * 0.2), feet, Math.max(1, Math.round(s * 0.8)), s * 2);
+  // The title band at the foot, and 一一 as its two calm strokes.
+  ctx.fillStyle = 'rgba(28,15,9,.78)';
+  ctx.fillRect(0, Math.round(h * 0.82), w, Math.round(h * 0.18));
+  ctx.fillStyle = '#f4e6cd';
+  const barW = Math.round(w * 0.17), barH = Math.max(2, Math.round(h * 0.014));
+  const barY = Math.round(h * 0.855);
+  ctx.fillRect(Math.round(w * 0.5 - barW - w * 0.035), barY, barW, barH);
+  ctx.fillRect(Math.round(w * 0.5 + w * 0.035), barY, barW, barH);
+  const title = 'YI YI';
+  pixelText(ctx, title, Math.round((w - textWidth(title, 2)) / 2), Math.round(h * 0.885), 2, '#f4e6cd');
+  const byline = 'EDWARD YANG';
+  pixelText(ctx, byline, Math.round((w - textWidth(byline, 1)) / 2), Math.round(h * 0.952), 1, '#c9a97e');
+}
+
+// A recital poster in the hall's own motif: amber rings spreading over a dark
+// dot field, with the title and the hour under them.
+export function paintRecitalPoster(ctx, w, h) {
+  ctx.fillStyle = '#15130e'; ctx.fillRect(0, 0, w, h);
+  ctx.fillStyle = 'rgba(255,179,71,.16)';
+  const pitch = Math.max(3, Math.round(w * 0.022));
+  for (let y = pitch; y < h; y += pitch) for (let x = pitch; x < w; x += pitch) ctx.fillRect(x, y, 1, 1);
+  const cx = w / 2, cy = h * 0.40, reach = Math.min(w, h) * 0.46;
+  for (let i = 0; i < 6; i++) {
+    ctx.strokeStyle = `rgba(255,179,71,${0.62 - i * 0.09})`;
+    ctx.lineWidth = Math.max(1, Math.round(w * 0.01));
+    ctx.beginPath(); ctx.arc(cx, cy, reach * (0.16 + i * 0.15), 0, Math.PI * 2); ctx.stroke();
+  }
+  const title = 'RECITAL';
+  pixelText(ctx, title, Math.round((w - textWidth(title, 2)) / 2), Math.round(h * 0.78), 2, '#f2c98f');
+  const sub = 'MUSIC HALL 20:00';
+  pixelText(ctx, sub, Math.round((w - textWidth(sub, 1)) / 2), Math.round(h * 0.88), 1, '#9a7a4e');
+}
+
+// A night sea: a low moon over dark water, the light broken into short dashes.
+export function paintNightSeaPoster(ctx, w, h) {
+  const sea = ctx.createLinearGradient(0, 0, 0, h);
+  sea.addColorStop(0, '#0d1a22'); sea.addColorStop(0.55, '#16323a'); sea.addColorStop(1, '#081216');
+  ctx.fillStyle = sea; ctx.fillRect(0, 0, w, h);
+  const mx = Math.round(w * 0.5), my = Math.round(h * 0.30), mr = Math.round(Math.min(w, h) * 0.11);
+  const halo = ctx.createRadialGradient(mx, my, 0, mx, my, mr * 3.4);
+  halo.addColorStop(0, 'rgba(236,232,208,.55)'); halo.addColorStop(1, 'rgba(236,232,208,0)');
+  ctx.fillStyle = halo; ctx.fillRect(0, 0, w, h);
+  ctx.fillStyle = '#ece8d0';
+  ctx.beginPath(); ctx.arc(mx, my, mr, 0, Math.PI * 2); ctx.fill();
+  // The horizon, and the moon's light broken on the water.
+  ctx.fillStyle = 'rgba(140,190,200,.35)';
+  ctx.fillRect(0, Math.round(h * 0.52), w, Math.max(1, Math.round(h * 0.004)));
+  const r = rng(31);
+  for (let i = 0; i < 46; i++) {
+    const t = i / 46, y = Math.round(h * (0.54 + t * 0.44));
+    const len = Math.round(w * (0.02 + r() * 0.09) * (1 - t * 0.4));
+    const x = mx + Math.round((r() - 0.5) * w * (0.16 + t * 0.3));
+    ctx.fillStyle = `rgba(236,232,208,${0.5 - t * 0.42})`;
+    ctx.fillRect(x - len / 2, y, len, Math.max(1, Math.round(h * 0.005)));
+  }
+}
+
+// The hall rug: a dark wool ground with a thin brass border and a faded inner
+// line, so the recital corner reads as a room within the room.
+export function paintRug(ctx, w, h) {
+  const r = rng(77);
+  ctx.fillStyle = '#3b3431';
+  ctx.fillRect(0, 0, w, h);
+  for (let i = 0; i < 3200; i++) {
+    ctx.fillStyle = r() > .5 ? 'rgba(255,242,222,.035)' : 'rgba(0,0,0,.07)';
+    ctx.fillRect(Math.floor(r() * w), Math.floor(r() * h), 1, 1);
+  }
+  const edge = '#b08d4a', inner = 'rgba(176,141,74,.32)';
+  ctx.fillStyle = edge;
+  ctx.fillRect(5, 5, w - 10, 2); ctx.fillRect(5, h - 7, w - 10, 2);
+  ctx.fillRect(5, 5, 2, h - 10); ctx.fillRect(w - 7, 5, 2, h - 10);
+  ctx.fillStyle = inner;
+  ctx.fillRect(13, 13, w - 26, 1); ctx.fillRect(13, h - 14, w - 26, 1);
+  ctx.fillRect(13, 13, 1, h - 26); ctx.fillRect(w - 14, 13, 1, h - 26);
+}
+
+
+// A whole bedroom wall as one mural: five ridges receding into dawn mist, a low
+// sun and a few birds. Painted edge to edge, so the room reads as a window on
+// the hills rather than a picture hung on a wall.
+export function paintMountainMural(ctx, w, h) {
+  const sky = ctx.createLinearGradient(0, 0, 0, h * 0.72);
+  sky.addColorStop(0, '#f6e6d2'); sky.addColorStop(0.55, '#eed5b9'); sky.addColorStop(1, '#e2bd9b');
+  ctx.fillStyle = sky; ctx.fillRect(0, 0, w, h);
+  // The sun, low on the right, with its haze.
+  const sx = w * 0.73, sy = h * 0.24, sr = Math.min(w, h) * 0.045;
+  const halo = ctx.createRadialGradient(sx, sy, 0, sx, sy, sr * 6);
+  halo.addColorStop(0, 'rgba(255,238,202,.9)'); halo.addColorStop(1, 'rgba(255,238,202,0)');
+  ctx.fillStyle = halo; ctx.fillRect(0, 0, w, h);
+  ctx.fillStyle = '#fbe8c0'; ctx.beginPath(); ctx.arc(sx, sy, sr, 0, Math.PI * 2); ctx.fill();
+  // Five ridges, palest first, each a soft noise silhouette.
+  const colours = ['#cdbca7', '#ac9d8c', '#828878', '#5d6c60', '#3c4943'];
+  for (let i = 0; i < colours.length; i++) {
+    const r = rng(120 + i * 17), phase = r() * 6.28;
+    const base = h * (0.44 + i * 0.105), amp = h * (0.17 - i * 0.026);
+    ctx.fillStyle = colours[i];
+    ctx.beginPath();
+    ctx.moveTo(0, h);
+    for (let x = 0; x <= w; x += 2) {
+      const t = x / w;
+      const v = Math.sin(t * (2.1 + i) + phase) * 0.5
+        + Math.sin(t * (5.3 + i * 1.6) + phase * 1.7) * 0.28
+        + (r() - 0.5) * 0.16;
+      ctx.lineTo(x, base - amp * (0.55 + v * 0.45));
+    }
+    ctx.lineTo(w, h); ctx.closePath(); ctx.fill();
+    // Mist gathering at the foot of each ridge.
+    const mist = ctx.createLinearGradient(0, base - amp * 0.2, 0, base + h * 0.16);
+    mist.addColorStop(0, 'rgba(243,229,211,0)');
+    mist.addColorStop(0.5, 'rgba(243,229,211,.4)');
+    mist.addColorStop(1, 'rgba(243,229,211,0)');
+    ctx.fillStyle = mist; ctx.fillRect(0, base - amp * 0.2, w, h * 0.36);
+  }
+  // A few birds above the second ridge.
+  ctx.strokeStyle = 'rgba(80,72,64,.55)';
+  ctx.lineWidth = Math.max(1, w * 0.0018);
+  for (const [bx, by, s] of [[0.30, 0.20, 1], [0.35, 0.155, 0.8], [0.245, 0.26, 0.7]]) {
+    const x = bx * w, y = by * h, k = s * Math.min(w, h) * 0.016;
+    ctx.beginPath(); ctx.moveTo(x - k, y); ctx.lineTo(x, y - k * 0.55); ctx.lineTo(x + k, y); ctx.stroke();
+  }
+}
+
+// A soft round bloom, used where a lamp's light sits on water or on a wall.
+export function paintGlow(ctx, w, h) {
+  const g = ctx.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, w / 2);
+  g.addColorStop(0, 'rgba(220,252,255,0.95)');
+  g.addColorStop(0.4, 'rgba(150,222,238,0.34)');
+  g.addColorStop(1, 'rgba(110,180,205,0)');
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, w, h);
+}
+
 // The music hall's floor, apron included. World extents: x ∈ [-20, -4], z ∈ [-7.5, 9.5].
 // Walnut boards with a pale inlay band, so the open floor reads as a hall rather
 // than as continuation of the living room.
@@ -543,8 +709,9 @@ export function paintJersey(ctx, w, h, { edition = 'association' } = {}) {
   // Keep the chosen home shirt's name on one straight line, with name and
   // number shifted down together and clear of the back collar.
   ctx.save(); ctx.translate(0, 4);
-  [...'TERRY'].forEach((letter, i) => {
-    ctx.save(); ctx.translate(26 + i * 6, 26); ctx.scale(1, 1.3);
+  const shirtName = 'NEIL';
+  [...shirtName].forEach((letter, i) => {
+    ctx.save(); ctx.translate(29 + i * 6, 26); ctx.scale(1, 1.3);
     pixelText(ctx, letter, 0, 0, 1, ink); ctx.restore();
   });
   ctx.beginPath(); ctx.moveTo(30, 39); ctx.lineTo(50, 39); ctx.lineTo(50, 45);
@@ -603,4 +770,3 @@ export function paintPoster(ctx, w, h) {
   ctx.fillRect(Math.round(w * 0.3), Math.round(h * 0.58), 2, 8);
   ctx.fillRect(Math.round(w * 0.3) - 2, Math.round(h * 0.62), 6, 2);
 }
-

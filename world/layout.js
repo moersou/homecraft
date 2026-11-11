@@ -23,8 +23,13 @@ export const PIANO = { x: -17.3, z: 4.8, yaw: -Math.PI / 2, scale: 1.4 };
 // there is a clear run-up to jump from.
 export const VERTEC = { x: -5.6, z: 15.05, yaw: Math.PI / 2 };
 
-// A full-floor master suite, reached by a broad stair along its east edge.
-export const LOFT = { x0: -20, x1: -3, z0: -12, z1: -4, y: 4 };
+// The master suite, reached by a broad stair along its east edge. It no longer
+// covers the whole footprint: the west part of the ground floor is the library.
+export const LOFT = { x0: -13, x1: -3, z0: -12, z1: -4, y: 4 };
+// The library west of the bedroom: a room of its own on the ground floor, with
+// one doorway onto the hall and one window in the west wall. A solid mass above
+// its ceiling closes the hall's north side up to the roof.
+export const STUDY = { x0: -20, x1: -14, z0: -12, z1: -5, door: { x0: -19, x1: -17 } };
 // A broad straight stair beside the hall, rising north into the mezzanine.
 // Eight metres of run for four metres of rise replaces the old 45-degree ladder.
 export const STAIRS = { x0: -6.8, x1: -3, z0: -4, z1: 4 };
@@ -37,9 +42,6 @@ export const ROOF_GLASS = [
 ];
 // A compact vertical ladder against the east wall, opening through the roof rim.
 export const ROOF_LADDER = { x: 25.65, z: 14.5, top: 11, gate0: 13, gate1: 16 };
-// The room behind the bookshelves: interior x ∈ [-20, -17), z ∈ [-12, -9);
-// its east wall (x = -17) holds a two-block door at z = -10.
-export const SECRET = { x0: -20, x1: -17, z0: -12, z1: -9, door: -10 };
 
 export const GARAGE = { x0: 11, x1: 20, z0: -12, z1: 3, door: { z0: -9, z1: -4 }, glassDoor: { z0: -3, z1: -1 } };
 // The water stands just below the deck; the floor (`bed`) is deep enough to dive to.
@@ -61,8 +63,7 @@ export const MAILBOX = { x: 5.0, z: 19.3, yaw: 0 };
 //
 // Off for now: the lawn is empty and nothing is drawn, walked into or pressed at.
 // Set PORTAL back to the object below and its station returns with it.
-export const PORTAL = null;
-// export const PORTAL = { x: 8.5, z: 25.5, yaw: Math.PI };
+export const PORTAL = { x: 8.5, z: 25.5, yaw: Math.PI };
 // A two-block door in the garage's north wall, out to the back and the mountain.
 export const BACKDOOR = { x0: 13, x1: 15 };
 

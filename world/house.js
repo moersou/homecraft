@@ -1,6 +1,6 @@
 // The house shell, the pool's basin and the island's surface, built from
 // blocks. The island itself comes from the engine (terrain.js buildIsland).
-import { HOUSE, LOFT, SECRET, GARAGE, POOL, TERRACE, DRIVEWAY, ENTRANCE, BACKDOOR, ROOF_GLASS, ROOF_LADDER } from './layout.js';
+import { HOUSE, LOFT, STUDY, GARAGE, POOL, TERRACE, DRIVEWAY, ENTRANCE, BACKDOOR, ROOF_GLASS, ROOF_LADDER } from './layout.js';
 import { inRect } from '@engine/world/terrain.js';
 
 const SHELL = { x0: HOUSE.x0 - 1, x1: HOUSE.x1 + 1, z0: HOUSE.z0 - 1, z1: HOUSE.z1 + 1 };
@@ -94,15 +94,16 @@ export function buildShell(grid) {
     const gate = x === x1 && z >= ROOF_LADDER.gate0 && z < ROOF_LADDER.gate1;
     if (rim && !gate) grid.set(x, height + 1, z, 'parapet', 'roof');
   }
-  // Back rooms under the loft, and the loft deck on top of them.
+  // The mass under the loft, and the loft deck on top of it.
   grid.fill(LOFT.x0, 0, LOFT.z0, LOFT.x1, LOFT.y - 1, LOFT.z1, 'brick');
   grid.fill(LOFT.x0, LOFT.y - 1, LOFT.z0, LOFT.x1, LOFT.y, LOFT.z1, 'loft');
-  // The save room keeps its existing collision/door identity, with quiet wood
-  // panels. A single curated bookcase is built as furniture beside the desk.
-  grid.fill(SECRET.x1, LOFT.y, LOFT.z0, SECRET.x1 + 1, LOFT.y + 3, SECRET.z1 + 1, 'bookshelf');
-  grid.fill(SECRET.x0, LOFT.y, SECRET.z1, SECRET.x1, LOFT.y + 3, SECRET.z1 + 1, 'bookshelf');
-  grid.fill(SECRET.x0, LOFT.y + 3, LOFT.z0, SECRET.x1 + 1, LOFT.y + 4, SECRET.z1 + 1, 'loft', 'secretTop');
-  for (let y = LOFT.y; y < LOFT.y + 2; y++) grid.set(SECRET.x1, y, SECRET.door, 'bookshelf', 'secretDoor');
+  // The library west of the loft: its south and east walls, the doorway through
+  // the south one, and the mass above its ceiling, which closes the hall's north
+  // side up to the roof and carries the bedroom's west end.
+  grid.fill(STUDY.x0, 0, STUDY.z1, STUDY.x1 + 1, LOFT.y, STUDY.z1 + 1, 'wall');
+  grid.fill(STUDY.x1, 0, STUDY.z0, STUDY.x1 + 1, LOFT.y, STUDY.z1 + 1, 'wall');
+  grid.fill(STUDY.x0, LOFT.y, STUDY.z0, STUDY.x1 + 1, HOUSE.height, STUDY.z1 + 1, 'brick');
+  for (let x = STUDY.door.x0; x < STUDY.door.x1; x++) for (let y = 0; y < 3; y++) grid.set(x, y, STUDY.z1, null);
   // The garage: a steel-framed glass wall to the west with a door in it, and a
   // low brick wall to the south that carries the TV of the games corner.
   for (let y = 0; y < height; y++) {
@@ -119,11 +120,13 @@ const clerestory = (i, y) => y >= 6 && y < 9;
 
 function northWall(x, y) {
   if (x >= -2 && x < GARAGE.x0) return true; // the workbench wall stays solid
+  if (x >= STUDY.x0 && x < STUDY.x1) return true; // solid behind the library mass
   return !clerestory(x, y);
 }
 
 function westWall(z, y) {
   if (z >= -3 && z < 7) return true; // solid behind the music hall's slat wall
+  if (z >= -10 && z < -6 && y >= 1 && y < 3) return false; // the library window
   return !clerestory(z, y);
 }
 
