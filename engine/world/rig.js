@@ -24,6 +24,7 @@ export function createRig(camera, world) {
   // Portrait screens see less sideways, so start higher and look down into the
   // room; a near-level view filled the lower half of a phone with bare floor.
   const portrait = innerHeight > innerWidth * 1.1;
+  const SKY_PITCH = 0;                           // lowest camera elevation; the aim does the rest
   const HOME_VIEW = portrait ? [0.1, 0.4, 8.5] : [0.14, 0.035, 8];
   let [yaw, pitch, distance] = HOME_VIEW;
   let yawGoal = yaw, pitchGoal = pitch, distanceGoal = distance;
@@ -53,7 +54,9 @@ export function createRig(camera, world) {
       return;
     }
     yawGoal -= dx * 0.0052;
-    pitchGoal = THREE.MathUtils.clamp(pitchGoal + dy * 0.0042, 0.06, 1.38);
+    // Below `SKY_PITCH` the camera stops descending and the view tips up instead,
+    // which is what puts the sky within reach in third person.
+    pitchGoal = THREE.MathUtils.clamp(pitchGoal + dy * 0.0042, -0.45, 1.38);
   }
   // Scrolling out of first person steps back behind the player.
   function zoom(f) {
@@ -84,10 +87,11 @@ export function createRig(camera, world) {
   }
 
   function placeFollow(out) {
-    const cp = Math.cos(pitch);
+    const ride = Math.max(pitch, SKY_PITCH);      // never sinks below the player's chest
+    const cp = Math.cos(ride);
     out.set(
       focus.x + Math.sin(yaw) * cp * distance,
-      focus.y + Math.sin(pitch) * distance,
+      focus.y + Math.sin(ride) * distance,
       focus.z + Math.cos(yaw) * cp * distance,
     );
     return out;
@@ -167,7 +171,11 @@ export function createRig(camera, world) {
       collide(dt, followPos);
       if (player.swimming || gazeT > 0) keepOffWater(followPos);
       camera.position.copy(followPos);
-      camera.lookAt(focus);
+      // Aim above the player once the pitch is under SKY_PITCH: the camera holds its
+      // place and the world tilts down, so the sky comes into view.
+      const lift = Math.max(0, SKY_PITCH - pitch) * distance * 1.5;
+      look.set(focus.x, focus.y + lift, focus.z);
+      camera.lookAt(look);
       lookUp(dt, player);
       return;
     }
