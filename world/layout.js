@@ -61,9 +61,13 @@ export const MAILBOX = { x: 5.0, z: 19.3, yaw: 0 };
 // faces the house (yaw π; 0 would face the sea), so from the terrace you walk
 // up to its face with the sea behind it, and visitors step out towards the house.
 //
-// Off for now: the lawn is empty and nothing is drawn, walked into or pressed at.
-// Set PORTAL back to the object below and its station returns with it.
-export const PORTAL = { x: 8.5, z: 25.5, yaw: Math.PI };
+// Off for now, at the owner's request, but not gone: the lawn is simply empty —
+// nothing is drawn there, nothing can be walked into and no station answers. To
+// bring it back, swap the comment marks on the two lines below. Everything else
+// (the frame, the walk-in, the station, the directory of worlds) follows from this
+// object existing; the engine reads PORTAL ?? null everywhere and skips it.
+export const PORTAL = null;
+// export const PORTAL = { x: 8.5, z: 25.5, yaw: Math.PI };
 // A two-block door in the garage's north wall, out to the back and the mountain.
 export const BACKDOOR = { x0: 13, x1: 15 };
 
