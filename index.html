@@ -89,6 +89,55 @@
 .tv-actions { display: flex; gap: 10px; justify-content: flex-end; }
 .tv-actions button { padding: 9px 18px; font: 600 14px/1 var(--text); color: #fff; background: var(--btn); border: 0; cursor: pointer; }
 .tv-actions button[type="submit"] { background: var(--accent); }
+/* The opening screen: wyc21.com's layout, with the material-pack slot left out.
+   #welcome keeps display:flex, so the hidden attribute needs its own rule. */
+#welcome {
+  position: fixed; inset: 0; z-index: 40; display: flex; flex-direction: column;
+  justify-content: space-between; align-items: center; gap: 24px;
+  padding: max(7vh, env(safe-area-inset-top)) 24px max(5vh, env(safe-area-inset-bottom));
+  overflow-y: auto; color: #fff7e7;
+  background: linear-gradient(180deg, rgba(16, 27, 30, .66), transparent 60%, rgba(16, 27, 30, .78));
+  text-align: center; text-shadow: 2px 2px 0 rgba(0, 0, 0, .65);
+  touch-action: manipulation; transition: opacity .45s ease;
+}
+#welcome[hidden] { display: none; }
+#welcome.leaving { opacity: 0; }
+.welcome-heading { max-width: 640px; }
+.welcome-logo { image-rendering: pixelated; filter: drop-shadow(2px 3px 0 rgba(0, 0, 0, .35)); }
+.welcome-eyebrow { margin: 14px 0; font-size: 13px; letter-spacing: .12em; }
+#welcomeTitle { margin: 0; font-size: clamp(36px, 6vw, 72px); line-height: 1.2; letter-spacing: .04em; }
+.welcome-tagline { margin: 16px 0; font-size: 21px; }
+.welcome-description { max-width: 480px; margin: 18px auto 0; font-size: 14px; line-height: 1.9; color: #e6e5db; }
+.welcome-footer { display: flex; flex-direction: column; align-items: center; gap: 14px; }
+#welcome .welcome-enter { min-width: 190px; min-height: 48px; background: #426849; color: #fff7e7; font-weight: 600; }
+#welcome .welcome-enter:hover { background: #527b58; }
+.welcome-hint { margin: 0; font-size: 12px; color: #e6e5db; }
+body.plain #welcome { display: none; }
+/* The switches and the dock belong to a world you have walked into: while the
+   opening screen is up the engine would already have shown them (its own intro
+   finishes after a few seconds), so the site holds them back until 进入世界. */
+body.entering #hud { opacity: 0; pointer-events: none; }
+@media (max-width: 600px) {
+  #welcome { padding: max(6vh, env(safe-area-inset-top)) 22px max(4vh, env(safe-area-inset-bottom)); }
+  .welcome-description { max-width: 320px; font-size: 13px; }
+  .welcome-eyebrow { font-size: 11px; letter-spacing: .05em; }
+  .welcome-tagline { font-size: 18px; }
+}
+@media (max-height: 540px) {
+  #welcome { flex-direction: row; justify-content: space-around; padding: 20px 28px; text-align: left; }
+  .welcome-heading { max-width: 52%; }
+  .welcome-logo { width: 30px; height: 30px; }
+  #welcomeTitle { font-size: 32px; }
+  .welcome-eyebrow, .welcome-tagline { margin: 8px 0; }
+  .welcome-footer { max-width: 40%; text-align: center; }
+}
+@media (prefers-reduced-motion: reduce) { #welcome { transition: none; } }
+/* On a phone the temperature moves back onto the weather button, which buys the
+   row enough width for the photo studio and the music switch as well. */
+@media (pointer: coarse) and (max-width: 1024px), (max-width: 700px) {
+  #tempPanel { display: none !important; }
+  #moodButton b { display: block; }
+}
 /* Six switches and the readout no longer fit across a narrow phone. */
 @media (max-width: 420px) {
   #corner { flex-wrap: wrap; justify-content: flex-end; max-width: calc(100vw - 24px); }
@@ -104,7 +153,23 @@
 <body>
 <main id="world" aria-label="Neil's Home"></main>
 
-<div id="loading"><div class="bar"><i></i></div><p class="loading-line">Building the house…</p></div>
+<div id="loading"><div class="bar"><i></i></div><p class="loading-line">Building the island…</p></div>
+<!-- The opening screen, after the one at wyc21.com: the world already running
+     behind a scrim, dismissed by any key or click. Site markup and styles; the
+     engine knows nothing of it. The camera is held in the air by world/build.js
+     until 进入世界 is pressed, and only then does the swoop play. -->
+<section id="welcome" hidden role="dialog" aria-modal="true" aria-labelledby="welcomeTitle">
+  <div class="welcome-heading">
+    <img class="welcome-logo" src="assets/favicon.png" width="64" height="64" alt="">
+    <p class="welcome-eyebrow">An island, a few ideas, a world of my own.</p>
+    <h1 id="welcomeTitle">Neil's Home</h1>
+    <p class="welcome-description">A year went by fast. I still remember working on this site last year like it was yesterday. Currently based in Shijiazhuang, always up to reach out for coffee or a chat.</p>
+  </div>
+  <div class="welcome-footer">
+    <button class="mc-button welcome-enter" type="button" data-en="Enter world">进入世界</button>
+    <p class="welcome-hint" data-en="Press any key or click anywhere to enter">按任意键或点击任意处进入</p>
+  </div>
+</section>
 
 <section id="pages">
   <h1 class="plain-title">Neil's Home</h1>
@@ -217,5 +282,6 @@ if (location.protocol === 'file:') {
      assets/phone.js, configured by home.config.js `music` and `tracks`. -->
 <script type="module" src="./assets/music.js"></script>
 <script type="module" src="./assets/phone.js"></script>
+<script type="module" src="./assets/welcome.js"></script>
 </body>
 </html>

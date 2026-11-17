@@ -130,6 +130,9 @@ export const DOORWAY = [{ x: 0.5, y: 1, z: 15 }, { x: 0.5, y: 1.2, z: 18 }];
 export const EXIT = { x: 0.5, z: 18.6 };
 // The opening shot starts high over the whole island (a portrait screen stands
 // further back so the house and the mountain still fit) and looks at `look`.
+// Where the opening camera hangs. On a portrait phone the house is the subject:
+// the frame is narrow, so the island is shown from the south-east at its own
+// distance and the mountain is simply out of shot.
 export const INTRO = { pos: [52, 40, 66], portrait: [83, 64, 106], look: [0, 0, 2] };
 
 // The cat stays indoors and naps on the sofa; the dog roams the terrace and
