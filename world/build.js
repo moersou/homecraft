@@ -8,6 +8,7 @@ import { buildOuter } from './outer.js';
 import { buildMountain } from './mountain.js';
 import { buildRoofAccess } from './roof-access.js';
 import { buildTaishan } from './taishan.js';
+import { ISLE, WALK, PLINTH } from './taishan-profile.js';
 import { createStainless } from './stainless.js';
 import { createVertec } from './vertec.js';
 import { createTv } from './tv.js';
@@ -63,6 +64,33 @@ function drawMap(ctx, X, Z, PPM) {
   const kw = 0.3 * s * along + 1.44 * s * across, kd = 1.44 * s * along + 0.3 * s * across;
   ctx.fillStyle = '#c8bda4';
   ctx.fillRect(X(kx - kw / 2), Z(kz - kd / 2), kw * PPM, kd * PPM);
+  drawTaishan(ctx, X, Z, PPM);
+}
+
+// Taishan's island on the radar: the sandbank, the boards out to it and the base the
+// statue stands on. The map is painted from blocks, and none of this is blocks, so it
+// is drawn in here beside the hall.
+function drawTaishan(ctx, X, Z, PPM) {
+  ctx.fillStyle = '#d8c49a';                                     // wet sand
+  ctx.beginPath();
+  ctx.arc(X(ISLE.x), Z(ISLE.z), ISLE.r * PPM, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#e9dcb6';                                     // the dry plateau
+  ctx.beginPath();
+  ctx.arc(X(ISLE.x), Z(ISLE.z), 8 * PPM, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#9a7345';                                     // the boards
+  ctx.fillRect(X(WALK.x - WALK.half), Z(WALK.z0), WALK.half * 2 * PPM, (WALK.z1 - WALK.z0) * PPM);
+  ctx.fillStyle = '#6b6259';
+  ctx.beginPath();
+  ctx.arc(X(PLINTH.x), Z(PLINTH.z), .9 * PPM, 0, Math.PI * 2);    // the statue, seen from above
+  ctx.fill();
+  ctx.fillStyle = '#8d8477';                                      // and its base
+  ctx.fillRect(X(PLINTH.x - PLINTH.w / 2), Z(PLINTH.z - PLINTH.d / 2), PLINTH.w * PPM, PLINTH.d * PPM);
+  ctx.fillStyle = '#6b6259';
+  ctx.beginPath();
+  ctx.arc(X(PLINTH.x), Z(PLINTH.z), .9 * PPM, 0, Math.PI * 2);
+  ctx.fill();
 }
 
 // The moving parts the engine does not know about: the Vertec in the gym

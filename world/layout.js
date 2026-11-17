@@ -105,6 +105,10 @@ export const onStairs = (x, z) => inside(STAIRS, x, z);
 // nothing, even though the player can walk (and fly) on it.
 export const NAV_AREA = { x0: -36, z0: -26, x1: 42, z1: 74 };
 
+// What the radar covers. The same box for now: the island is the only ground this
+// far south, and it has to appear on the map as well as in the walk grid.
+export const MAP_AREA = { x0: -36, z0: -26, x1: 42, z1: 74 };
+
 export function floorAt(x, z) {
   const taishan = taishanSurface(x, z);
   if (taishan !== null) return taishan;

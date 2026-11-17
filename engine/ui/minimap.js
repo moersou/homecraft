@@ -4,6 +4,9 @@
 import * as L from '@world/layout.js';
 
 const ISLAND = L.ISLAND, STATIONS = L.STATIONS || [], POOL = L.POOL || null, HOUSE = L.HOUSE || null;
+// What the radar shows: the block island, widened by the world when there is ground
+// beyond it (Taishan's sandbank south of the shore).
+const AREA = L.MAP_AREA || ISLAND;
 import { icon } from './icons.js';
 import { nameOf } from '../lang.js';
 
@@ -18,7 +21,7 @@ const COLORS = {
 
 // `decorate(ctx, X, Z, PPM)` lets a world paint extras (a court's lines) over the blocks.
 export function drawMapImage(grid, obstacles, decorate = null) {
-  const w = (ISLAND.x1 - ISLAND.x0) * PPM, h = (ISLAND.z1 - ISLAND.z0) * PPM;
+  const w = (AREA.x1 - AREA.x0) * PPM, h = (AREA.z1 - AREA.z0) * PPM;
   const canvas = document.createElement('canvas');
   canvas.width = w; canvas.height = h;
   const ctx = canvas.getContext('2d');
@@ -36,7 +39,7 @@ export function drawMapImage(grid, obstacles, decorate = null) {
     const c = v => Math.max(0, Math.min(255, Math.round(v * k)));
     return `rgb(${c(n >> 16)},${c((n >> 8) & 255)},${c(n & 255)})`;
   };
-  for (let x = ISLAND.x0; x < ISLAND.x1; x++) for (let z = ISLAND.z0; z < ISLAND.z1; z++) {
+  for (let x = AREA.x0; x < AREA.x1; x++) for (let z = AREA.z0; z < AREA.z1; z++) {
     const here = top(x, z);
     if (!here) continue;
     const north = top(x, z - 1);
@@ -46,9 +49,9 @@ export function drawMapImage(grid, obstacles, decorate = null) {
     const pool = !!POOL && x >= POOL.x0 && x < POOL.x1 && z >= POOL.z0 && z < POOL.z1;
     // A block type can bring its own map colour: grid.define('x', { map: '#hex', ... }).
     ctx.fillStyle = shade(pool ? COLORS.pool_deep : here.t.map || COLORS[here.t.name] || '#888888', k);
-    ctx.fillRect((x - ISLAND.x0) * PPM, (z - ISLAND.z0) * PPM, PPM, PPM);
+    ctx.fillRect((x - AREA.x0) * PPM, (z - AREA.z0) * PPM, PPM, PPM);
   }
-  const X = x => (x - ISLAND.x0) * PPM, Z = z => (z - ISLAND.z0) * PPM;
+  const X = x => (x - AREA.x0) * PPM, Z = z => (z - AREA.z0) * PPM;
   decorate?.(ctx, X, Z, PPM);
   // Furniture, as soft shadows.
   ctx.fillStyle = 'rgba(30, 34, 38, .28)';
@@ -123,7 +126,7 @@ export function createMinimap({ root, bigRoot, grid, obstacles, decorate = null,
     ctx.rotate(yaw);
     ctx.imageSmoothingEnabled = false;
     const k = scale / PPM;
-    ctx.drawImage(mapImage, (ISLAND.x0 - p.x) * scale, (ISLAND.z0 - p.z) * scale, mapImage.width * k, mapImage.height * k);
+    ctx.drawImage(mapImage, (AREA.x0 - p.x) * scale, (AREA.z0 - p.z) * scale, mapImage.width * k, mapImage.height * k);
     // Route to the waypoint.
     const route = getRoute();
     if (route && route.length) {
@@ -175,8 +178,8 @@ export function createMinimap({ root, bigRoot, grid, obstacles, decorate = null,
     if (open) {
       const r = big.getBoundingClientRect();
       big.width = Math.round(r.width * dpr); big.height = Math.round(r.height * dpr);
-      const fitScale = Math.min(big.width / (ISLAND.x1 - ISLAND.x0), big.height / (ISLAND.z1 - ISLAND.z0)) * 0.94;
-      view = { cx: (ISLAND.x0 + ISLAND.x1) / 2, cz: (ISLAND.z0 + ISLAND.z1) / 2, scale: fitScale, min: fitScale * 0.9, max: fitScale * 4 };
+      const fitScale = Math.min(big.width / (AREA.x1 - AREA.x0), big.height / (AREA.z1 - AREA.z0)) * 0.94;
+      view = { cx: (AREA.x0 + AREA.x1) / 2, cz: (AREA.z0 + AREA.z1) / 2, scale: fitScale, min: fitScale * 0.9, max: fitScale * 4 };
       drawBig();
     }
     return !bigRoot.hidden;
@@ -217,9 +220,9 @@ export function createMinimap({ root, bigRoot, grid, obstacles, decorate = null,
     bctx.fillStyle = '#9fc6e8';
     bctx.fillRect(0, 0, W, H);
     bctx.imageSmoothingEnabled = false;
-    const ox = W / 2 - (view.cx - ISLAND.x0) * s, oz = H / 2 - (view.cz - ISLAND.z0) * s;
+    const ox = W / 2 - (view.cx - AREA.x0) * s, oz = H / 2 - (view.cz - AREA.z0) * s;
     bctx.drawImage(mapImage, ox, oz, mapImage.width * s / PPM, mapImage.height * s / PPM);
-    const P = (x, z) => [ox + (x - ISLAND.x0) * s, oz + (z - ISLAND.z0) * s];
+    const P = (x, z) => [ox + (x - AREA.x0) * s, oz + (z - AREA.z0) * s];
     bctx.font = `600 ${13 * dpr}px -apple-system, BlinkMacSystemFont, "PingFang SC", system-ui, sans-serif`;
     bctx.textAlign = 'left'; bctx.textBaseline = 'middle';
     for (const { s: st, img } of blips) {
