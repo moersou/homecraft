@@ -138,12 +138,16 @@ export const INTRO = { pos: [52, 40, 66], portrait: [83, 64, 106], look: [0, 0, 
 // The cat stays indoors and naps on the sofa; the dog roams the terrace and
 // comes in by the front door. Routes round the sofa and through the doorway
 // are spelled out where string-pulling would cut a corner.
+import { createPoodleDog } from './poodle-dog.js';
+
 export const PETS = {
   cat: {
     anchors: [[5.8, 5.2], [1.85, -3.2], [1.2, -8.3], [8, 13.3], [12, 6.3]], home: [1.85, -3.2], within: inHouse,
     detour: (points, hub, x, z, valid) => !valid(points) && z < 0 ? [hub, { x: 1.85, z: hub.z }, { x: 1.85, z: z < -5 ? -6.8 : z }, { x, z }] : null,
   },
   dog: {
+    // The dog wears the poodle body instead of the engine's Doberman.
+    body: createPoodleDog,
     anchors: [[7, 19.8], [12, 20], [18, 19.5], [-5, 20.3], [0.5, 13.5], [5.8, 5.2]],
     // Keep the wider dog clear of the terrace mailbox before entering the hall.
     detour: (points, hub, x, z, valid) => valid(points) ? null

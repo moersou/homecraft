@@ -153,7 +153,8 @@ async function boot() {
   for (const [kind, make, seed] of [['cat', createCat, 1989], ['dog', createDog, 2525]]) {
     const plan = L.PETS?.[kind];
     if (!plan) continue;
-    const body = bodies[kind] = make(); stage.scene.add(body.root);
+    // A world may hand over its own body for a pet (layout PETS[kind].body).
+    const body = bodies[kind] = (plan.body || make)(); stage.scene.add(body.root);
     pets.push(createPetLife(body, nav, { kind, seed, ...plan }));
   }
   const cat = bodies.cat || null, dog = bodies.dog || null;
