@@ -39,7 +39,7 @@ export function createVertec({ avatar, sound }) {
     // their side, and knocks them away from himself.
     if (air && grounded && Math.hypot(x - tip.x, z - tip.z) < 0.9) {
       const h = player.heading, right = (tip.x - x) * -Math.cos(h) + (tip.z - z) * Math.sin(h);
-      avatar.reach(right >= 0 ? 'R' : 'L');
+      avatar.reach?.(right >= 0 ? 'R' : 'L');   // 0.2.0's avatar has no reach()
       const side = (x - VERTEC.x) * swing.x + (z - VERTEC.z) * swing.z;
       jump = { spin: side > 0 ? -1 : 1, top: player.y, extra: Math.random() * 0.05 };
     }
