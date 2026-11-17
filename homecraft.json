@@ -2,8 +2,11 @@
   "version": 1,
   "name": "Neil's Home",
   "url": "",
-  "logo": "assets/favicon.png",
-  "intro": "",
+  "logo": "assets/logo.png",
+  "intro": {
+    "zh": "我要去告诉别人他们不知道的事情，给他们看他们看不到的东西。我想，这样一定天天都很好玩。",
+    "en": "We live in a twilight world."
+  },
   "lang": ["zh", "en"],
   "homecraft": true
 }
