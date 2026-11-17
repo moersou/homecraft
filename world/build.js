@@ -7,6 +7,7 @@ import { furnish } from './furnish.js';
 import { buildOuter } from './outer.js';
 import { buildMountain } from './mountain.js';
 import { buildRoofAccess } from './roof-access.js';
+import { buildTaishan } from './taishan.js';
 import { createStainless } from './stainless.js';
 import { createVertec } from './vertec.js';
 import { createTv } from './tv.js';
@@ -24,11 +25,21 @@ export function build({ grid, layer, materials, stage }) {
   // The pier and sailboat, the mountain and the roof's outside stair are
   // ground of their own, outside the block grid.
   const outer = buildOuter(layer, materials), mountain = buildMountain(layer, materials), roofAccess = buildRoofAccess(layer, materials);
+  // Taishan's island off the front door. It is the world's own furniture, so a
+  // failure there must not keep the house shut: the reason goes to the console and
+  // the island is simply absent.
+  let taishan = null;
+  try {
+    taishan = buildTaishan(layer, materials);
+    stage.scene.add(taishan.group);
+  } catch (error) {
+    console.error('Taishan island failed to build:', error);
+  }
   stage.scene.add(outer.group, mountain.group, roofAccess.group);
   return {
     batches: furn.batches, planes: furn.planes, obstacles: furn.obstacles, lights: furn.lights, bakes: [...furn.lighting, ...outer.lamps, ...mountain.lamps],
     hotspots: furn.hotspots, animated: furn.animated, surfaces: furn.surfaces, forest,
-    sites: [outer, mountain], sitesAfter: [roofAccess],
+    sites: [outer, mountain, ...(taishan ? [taishan] : [])], sitesAfter: [roofAccess],
     named: { outer, mountain, roofAccess, drawMap },
   };
 }
