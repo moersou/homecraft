@@ -8,28 +8,14 @@
 import * as THREE from 'three';
 import { BoxBatch } from '@engine/world/blocks.js';
 import { canvasTexture } from '@engine/world/textures.js';
+import { WALK, ISLE, PLATEAU, PLINTH, BANDS, BAND, bandTop, isleHeight, pickSurface } from './taishan-profile.js';
 
 // ---------- Where it stands ----------
-const WALK = { x: 6.5, half: 1.7, z0: 30.2, z1: 43.4, y: .62 };    // boardwalk
-const ISLE = { x: 6.5, z: 58, r: 15.5 };                           // sandbank
-const PLINTH = { x: 6.5, z: 58.6, w: 13, h: 1.6, d: 12 };
+// The bank's shape and the base live in taishan-profile.js, because the walk grid
+// and the map need them too.
 // How much bigger than the study model the statue is: 1.5 puts it at 21 m, twice
 // the height of the house.
 const SCALE = 1.5;
-// The bank is stepped: six terraces of blocks down from the plateau to the water.
-// `isleHeight` returns the top of the terrace a point is on, so the visitor walks
-// exactly on the surface they can see instead of sinking into it.
-const PLATEAU = 1.8;                       // the flat top the base stands on
-const BANDS = 6, BAND = (ISLE.r - 8) / BANDS, RISE = .28;
-const bandTop = k => .12 + k * RISE;        // k = 0 is the outermost, wettest ring
-function bandOf(distance) {
-  return Math.max(0, Math.min(BANDS - 1, Math.floor((ISLE.r - distance) / BAND)));
-}
-function isleHeight(distance) {
-  if (distance > ISLE.r) return null;
-  return distance <= 8 ? PLATEAU : bandTop(bandOf(distance));
-}
-
 // The nameplate beside the base: foot on the sand, plate turned to the north.
 const SIGN = { x: 13.9, z: 56.2, y: PLATEAU };   // foot on the sand
 
@@ -192,10 +178,14 @@ export function buildTaishan(layer, materials) {
   root.add(board);
 
   // ---------- What the world walks on ----------
+  // Unnamed on purpose. A named site (roof, pier, mountain) is somewhere the engine
+  // travels to by its own rules; this is plain walkable ground, so clicking it should
+  // use the ordinary route — which it can now do, because the walk grid covers the
+  // bank and the boards (see NAV_AREA in layout.js).
   function levels(x, z, out) {
-    if (Math.abs(x - WALK.x) <= WALK.half && z >= WALK.z0 && z <= WALK.z1) out.push({ y: WALK.y, site: 'boardwalk' });
+    if (Math.abs(x - WALK.x) <= WALK.half && z >= WALK.z0 && z <= WALK.z1) out.push({ y: WALK.y });
     const y = isleHeight(Math.hypot(x - ISLE.x, z - ISLE.z));
-    if (y !== null) out.push({ y, site: 'taishan' });
+    if (y !== null) out.push({ y });
   }
   const heightAt = (x, z) => {
     const y = isleHeight(Math.hypot(x - ISLE.x, z - ISLE.z));
@@ -204,5 +194,13 @@ export function buildTaishan(layer, materials) {
   const obstructed = (x, z) => Math.abs(x - PLINTH.x) <= PLINTH.w / 2 && Math.abs(z - PLINTH.z) <= PLINTH.d / 2;
   const spots = () => [{ x: WALK.x, z: WALK.z0 + 1 }, { x: WALK.x, z: ISLE.z - 8 }];
 
-  return { group: root, levels, heightAt, obstructed, spots };
+  // The walk grid knows nothing about `obstructed`, so the base also goes in as an
+  // obstacle: without it a route to the sand behind the statue would run through it.
+  const obstacles = [{ x0: PLINTH.x - PLINTH.w / 2, x1: PLINTH.x + PLINTH.w / 2, z0: PLINTH.z - PLINTH.d / 2, z1: PLINTH.z + PLINTH.d / 2, level: 0 }];
+
+  // The island is not blocks, so it has to answer the pointer itself: this is what
+  // turns a click on the sand into a walk there.
+  const pick = ray => pickSurface(ray.origin, ray.direction);
+
+  return { group: root, levels, heightAt, obstructed, obstacles, spots, pick };
 }

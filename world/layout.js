@@ -100,7 +100,14 @@ export const onLoft = (x, z) => inside(LOFT, x, z);
 export const onStairs = (x, z) => inside(STAIRS, x, z);
 
 // Floor height under (x, z): ground, the mezzanine, or the stair between them.
+// The area the click-to-walk grid must cover: the island plus the sandbank off its
+// south shore. Without this the grid stops at the coast and clicks out there do
+// nothing, even though the player can walk (and fly) on it.
+export const NAV_AREA = { x0: -36, z0: -26, x1: 42, z1: 74 };
+
 export function floorAt(x, z) {
+  const taishan = taishanSurface(x, z);
+  if (taishan !== null) return taishan;
   if (onLoft(x, z)) return LOFT.y;
   if (onStairs(x, z)) return Math.max(0, Math.min(LOFT.y, (STAIRS.z1 - z) * (LOFT.y / (STAIRS.z1 - STAIRS.z0))));
   return 0;
@@ -139,6 +146,7 @@ export const INTRO = { pos: [52, 40, 66], portrait: [83, 64, 106], look: [0, 0, 
 // comes in by the front door. Routes round the sofa and through the doorway
 // are spelled out where string-pulling would cut a corner.
 import { createPoodleDog } from './poodle-dog.js';
+import { surfaceAt as taishanSurface } from './taishan-profile.js';
 
 export const PETS = {
   cat: {

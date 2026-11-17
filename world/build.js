@@ -37,7 +37,7 @@ export function build({ grid, layer, materials, stage }) {
   }
   stage.scene.add(outer.group, mountain.group, roofAccess.group);
   return {
-    batches: furn.batches, planes: furn.planes, obstacles: furn.obstacles, lights: furn.lights, bakes: [...furn.lighting, ...outer.lamps, ...mountain.lamps],
+    batches: furn.batches, planes: furn.planes, obstacles: [...furn.obstacles, ...(taishan ? taishan.obstacles : [])], lights: furn.lights, bakes: [...furn.lighting, ...outer.lamps, ...mountain.lamps],
     hotspots: furn.hotspots, animated: furn.animated, surfaces: furn.surfaces, forest,
     sites: [outer, mountain, ...(taishan ? [taishan] : [])], sitesAfter: [roofAccess],
     named: { outer, mountain, roofAccess, drawMap },

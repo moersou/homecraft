@@ -4,7 +4,9 @@
 // straight. A world's floorAt gives the floor height under each point.
 import * as L from '@world/layout.js';
 
-const ISLAND = L.ISLAND, POOL = L.POOL || null, floorAt = L.floorAt || (() => 0);
+// The region the grid covers: the world may widen it past the island's own box, for
+// ground that is a site rather than blocks (Taishan's sandbank, here).
+const AREA = L.NAV_AREA || L.ISLAND, ISLAND = L.ISLAND, POOL = L.POOL || null, floorAt = L.floorAt || (() => 0);
 const inPool = POOL ? (x, z) => x >= POOL.x0 && x < POOL.x1 && z >= POOL.z0 && z < POOL.z1 : () => false;
 
 const RES = 4; // cells per metre
@@ -15,8 +17,8 @@ export const isWet = h => h < -0.5;
 const STEP = 0.6;
 
 export function createNav(grid, obstacles) {
-  const x0 = ISLAND.x0, z0 = ISLAND.z0;
-  const cols = (ISLAND.x1 - ISLAND.x0) * RES, rows = (ISLAND.z1 - ISLAND.z0) * RES;
+  const x0 = AREA.x0, z0 = AREA.z0;
+  const cols = (AREA.x1 - AREA.x0) * RES, rows = (AREA.z1 - AREA.z0) * RES;
   const floor = new Float32Array(cols * rows);
   const blocked = new Uint8Array(cols * rows);
   const clearance = new Uint8Array(cols * rows);
