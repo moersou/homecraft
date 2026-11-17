@@ -149,11 +149,10 @@ export function createTv({ stage, world }) {
     return true;
   }
 
-  // Whatever was playing last time comes back; a broken link leaves the invite.
-  try {
-    const kept = localStorage.getItem(STORE);
-    if (kept) { if (!apply(kept)) showStill(); } else showStill();
-  } catch { showStill(); }
+  // Nothing starts on its own: a visit opens on the invitation. The last link is
+  // still remembered, but only offered back inside the panel, so walking past the
+  // television never sets a video — or its sound — going by itself.
+  showStill();
 
   // Clicking the screen (or 换一个) opens the little paste panel.
   const open = () => {
